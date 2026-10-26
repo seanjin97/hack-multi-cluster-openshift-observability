@@ -3,9 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+echo "Installing ACM. This usually takes 15-20 min in total."
+
 oc apply -f 01-operator.yaml
 
-echo "Waiting for ACM operator to register the MultiClusterHub CRD..."
+echo "Waiting for ACM operator to register the MultiClusterHub CRD (~2-5 min)..."
 until oc get crd multiclusterhubs.operator.open-cluster-management.io >/dev/null 2>&1; do sleep 10; done
 oc wait --for=condition=Established crd/multiclusterhubs.operator.open-cluster-management.io --timeout=5m
 
