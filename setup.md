@@ -9,12 +9,13 @@
 
 ![post-install.png](images/post-install.png)
 
-8. Get `oc` installed: `eval $(crc oc-env)`
-9. Verify `oc` works: `oc login -u developer https://api.crc.testing:6443`
-10. Enable cluster monitoring: `crc config set enable-cluster-monitoring true`
-11. Adjust cpu limits: `crc config set cpus 8`. Adjust accordingly.
-12. Adjust memory limits: `crc config set memory 24576`. Adjust accordingly.
-13. Restart cluster to get the updated limits: `crc stop`, `crc start`.
-14. Verify that limit are updated: `crc config view`
-15. Verify that Prometheus is installed: `oc get pods -n openshift-monitoring | grep prometheus`
-16. Install ACM: `./platform-tools/acm/install/install.sh`
+8. Access the web portal: https://console-openshift-console.apps-crc.testing
+9. Get `oc` installed: `eval $(crc oc-env)`
+10. Verify `oc` works: `oc login -u developer https://api.crc.testing:6443`
+11. Enable cluster monitoring: `crc config set enable-cluster-monitoring true`
+12. Adjust cpu limits: `crc config set cpus 8`. Adjust accordingly.
+13. Adjust memory limits: `crc config set memory 24576`. Adjust accordingly.
+14. Restart cluster to get the updated limits: `crc stop`, `crc start`.
+15. Verify that limit are updated: `crc config view`
+16. Verify that Prometheus is installed: `oc get pods -n openshift-monitoring | grep prometheus`
+17. Install ACM: `./platform-tools/acm/install/install.sh`
