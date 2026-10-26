@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# OpenShift Local ships oc but doesn't put it on PATH
+command -v oc >/dev/null || eval "$(crc oc-env)"
+
 echo "Installing ACM. This usually takes 15-20 min in total."
 
 oc apply -f 01-operator.yaml
