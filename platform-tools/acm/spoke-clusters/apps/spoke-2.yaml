@@ -1,11 +1,11 @@
 # nginx + redis, nginx spread over both nodes, plus a tiny load generator
 apiVersion: v1
 kind: Namespace
-metadata: {name: demo}
+metadata: {name: spoke-2-demo}
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: web, namespace: demo}
+metadata: {name: web, namespace: spoke-2-demo}
 spec:
   replicas: 2
   selector: {matchLabels: {app: web}}
@@ -21,14 +21,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: {name: web, namespace: demo}
+metadata: {name: web, namespace: spoke-2-demo}
 spec:
   selector: {app: web}
   ports: [{port: 80}]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: redis, namespace: demo}
+metadata: {name: redis, namespace: spoke-2-demo}
 spec:
   replicas: 1
   selector: {matchLabels: {app: redis}}
@@ -43,14 +43,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: {name: redis, namespace: demo}
+metadata: {name: redis, namespace: spoke-2-demo}
 spec:
   selector: {app: redis}
   ports: [{port: 6379}]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: loadgen, namespace: demo}
+metadata: {name: loadgen, namespace: spoke-2-demo}
 spec:
   replicas: 1
   selector: {matchLabels: {app: loadgen}}
