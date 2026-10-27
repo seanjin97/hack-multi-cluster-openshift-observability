@@ -1,3 +1,13 @@
+# Tools required
+| Tool | For | Install |
+|---|---|---|
+| `crc` | OpenShift Local, the ACM hub | Red Hat's installer, steps 1-3 below |
+| `oc` | Talking to all 3 clusters, hub and spokes. No need for `kubectl` | Ships with crc, step 9 below |
+| Docker | Runs the k3s spoke nodes as containers. Any Docker works; this guide uses [Colima](https://github.com/abiosoft/colima) | `brew install colima docker` |
+| `k3d` | Creates the k3s spoke clusters | `brew install k3d` |
+
+The scripts also use `python3` and `base64`, and the metrics query below uses `curl`. All come with macOS (`python3` via the Xcode command line tools).
+
 # Openshift-local setup
 1. Go to https://console.redhat.com/openshift/create/local (create account and login)
 2. Click `Download Openshift Local`
@@ -97,19 +107,30 @@ How it works: ACM's Grafana sits behind an OpenShift login proxy and trusts two 
 ## Spoke clusters
 crc is the only OpenShift cluster (the ACM hub). The spokes are real, lightweight [k3s](https://k3s.io) clusters run by [k3d](https://k3d.io) in Docker, imported into ACM like any other cluster.
 
-1. `brew install k3d`
+1. Install Docker and k3d (see [Tools required](#tools-required))
 2. Start Docker with room for the spokes: `colima start --cpu 4 --memory 6 --disk 20` (see the [budget](#openshift-local-setup) under step 14). Colima's disk can't shrink, so if `colima list` shows `Broken` or a bigger disk (the existing VM has 100GiB), run `colima delete` first
 3. `./platform-tools/acm/spoke-clusters/spokes.sh [count]` (default 2). Behind Cloudflare WARP, prefix it with the same `CA=...` as step 18.
-4. `oc get managedcluster` shows `spoke-1`, `spoke-2` as `JOINED` and `AVAILABLE`. Metrics show up in Grafana ~5-10 min later.
+4. `oc get managedcluster` shows `spoke-1`, `spoke-2` as `JOINED` and `AVAILABLE`. Metrics show up in Grafana a few minutes later.
 
 What you get:
 - Each `spoke-N` has 2 nodes (1 server, 1 agent), with traefik, servicelb and metrics-server turned off to save memory.
-- ACM installs its observability addon on each one (`open-cluster-management-addon-observability`): a small Prometheus, kube-state-metrics and node-exporter, pushing to the hub every 5 min.
-- Sample apps in the `demo` namespace, so each cluster's graphs look different: `spoke-1` runs podinfo (frontend → backend), `spoke-2` runs nginx and redis. Both have a tiny load generator. Edit `apps/spoke-N.yaml` to change them.
-- Use a spoke with `kubectl --context k3d-spoke-1 ...` (or `oc --context`). The script doesn't switch your current context, so `oc` stays on the hub.
+- ACM installs its observability addon on each one (`open-cluster-management-addon-observability`): a small Prometheus, kube-state-metrics and node-exporter, pushing to the hub every 30s (`interval` in `04-observability.yaml`; ACM's default is 5 min).
+- Sample apps in a `spoke-N-demo` namespace, so each cluster's graphs look different and the namespace says which cluster it's on: `spoke-1` runs podinfo (frontend → backend), `spoke-2` runs nginx and redis. Both have a tiny load generator. Edit `apps/spoke-N.yaml` to change them.
 - `./spokes.sh 0` removes them all, from ACM and k3d.
 
 How they reach the hub: crc's `api.crc.testing` and `*.apps-crc.testing` resolve to the Mac's `127.0.0.1`. The script maps those names, inside each k3s cluster, to Docker's host gateway, which is the Mac. The spokes pull ACM's agent images from `registry.redhat.io` using crc's own pull secret.
+
+### Working with the 3 clusters
+All three are contexts in `~/.kube/config`: `crc-admin` (hub), `k3d-spoke-1`, `k3d-spoke-2`. Keep the current context on the hub and pass `--context` for spokes, instead of switching back and forth. Every command then says which cluster it hits, and a forgotten switch can't land a deploy on the wrong cluster.
+```
+oc get pods -A                                          # hub (current context)
+oc --context k3d-spoke-1 get pods -n spoke-1-demo       # one spoke
+for c in crc-admin k3d-spoke-1 k3d-spoke-2; do echo "== $c"; oc --context $c get nodes; done   # all
+oc --context k3d-spoke-2 apply -f platform-tools/acm/spoke-clusters/apps/spoke-2.yaml   # deploy
+```
+- **Read-only checks across clusters:** you rarely need to log in to a spoke. The hub's Grafana and the `rbac-query-proxy` query above already show every cluster's metrics, filtered by the `cluster` label.
+- **Deploying:** `oc --context <spoke> apply -f` for these demo apps. To drive spokes from the hub instead, ACM's `ManifestWork` (installed, `oc get manifestwork -A`) applies manifests to a managed cluster from its namespace on the hub. Use it only once you want the hub to own what runs where; for 2 demo spokes it's extra indirection.
+- **Interactive:** [k9s](https://k9scli.io) (`brew install k9s`, `:ctx` to switch) is the easiest way to browse several clusters. If you do switch contexts, `oc config use-context crc-admin` gets you back, and `install.sh`/`spokes.sh` assume the hub is current.
 
 ## Trimmed ACM features
 To fit a small crc VM, `02-multiclusterhub.yaml` and `install.sh` turn off ACM features this repo doesn't use, and run 1 replica of each component:
