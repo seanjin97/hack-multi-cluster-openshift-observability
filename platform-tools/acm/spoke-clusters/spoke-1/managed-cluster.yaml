@@ -1,0 +1,15 @@
+# Registers spoke-1 with the ACM hub (applied to the hub, not the spoke).
+# ACM then creates namespace spoke-1 on the hub holding the import manifests
+# (secret spoke-1-import) that spokes.sh applies on the spoke.
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: spoke-1
+  labels:
+    spoke-cluster: "true"
+    name: spoke-1
+    cloud: auto-detect
+    vendor: auto-detect
+    cluster.open-cluster-management.io/clusterset: default
+spec:
+  hubAcceptsClient: true

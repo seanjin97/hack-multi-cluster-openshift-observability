@@ -1,0 +1,4 @@
+# Sample apps on spoke-2: oc --context k3d-spoke-2 apply -k spoke-2
+namespace: spoke-2-demo
+resources:
+  - apps.yaml

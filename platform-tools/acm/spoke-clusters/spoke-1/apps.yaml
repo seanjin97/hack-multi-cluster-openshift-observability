@@ -5,7 +5,7 @@ metadata: {name: spoke-1-demo}
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: backend, namespace: spoke-1-demo}
+metadata: {name: backend}
 spec:
   replicas: 1
   selector: {matchLabels: {app: backend}}
@@ -20,14 +20,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: {name: backend, namespace: spoke-1-demo}
+metadata: {name: backend}
 spec:
   selector: {app: backend}
   ports: [{port: 9898}]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: frontend, namespace: spoke-1-demo}
+metadata: {name: frontend}
 spec:
   replicas: 2
   selector: {matchLabels: {app: frontend}}
@@ -44,14 +44,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: {name: frontend, namespace: spoke-1-demo}
+metadata: {name: frontend}
 spec:
   selector: {app: frontend}
   ports: [{port: 9898}]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: loadgen, namespace: spoke-1-demo}
+metadata: {name: loadgen}
 spec:
   replicas: 1
   selector: {matchLabels: {app: loadgen}}
