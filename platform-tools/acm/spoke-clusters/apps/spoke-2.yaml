@@ -1,0 +1,64 @@
+# nginx + redis, nginx spread over both nodes, plus a tiny load generator
+apiVersion: v1
+kind: Namespace
+metadata: {name: demo}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: web, namespace: demo}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: web}}
+  template:
+    metadata: {labels: {app: web}}
+    spec:
+      topologySpreadConstraints:
+        - {maxSkew: 1, topologyKey: kubernetes.io/hostname, whenUnsatisfiable: ScheduleAnyway, labelSelector: {matchLabels: {app: web}}}
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: web, namespace: demo}
+spec:
+  selector: {app: web}
+  ports: [{port: 80}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: redis, namespace: demo}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: redis}}
+  template:
+    metadata: {labels: {app: redis}}
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: [--maxmemory, 32mb, --save, ""]
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 48Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: redis, namespace: demo}
+spec:
+  selector: {app: redis}
+  ports: [{port: 6379}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: loadgen, namespace: demo}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: loadgen}}
+  template:
+    metadata: {labels: {app: loadgen}}
+    spec:
+      containers:
+        - name: load
+          image: redis:7-alpine
+          command: [sh, -c, 'while true; do wget -qO- -T2 http://web >/dev/null; redis-cli -h redis incr hits >/dev/null; sleep 0.5; done']
+          resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 20m, memory: 16Mi}}
