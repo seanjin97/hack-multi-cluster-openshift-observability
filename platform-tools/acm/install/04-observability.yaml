@@ -5,7 +5,9 @@ metadata:
 spec:
   # smallest footprint; single-node crc doesn't have room for more
   instanceSize: minimal
-  observabilityAddonSpec: {}
+  observabilityAddonSpec:
+    # seconds between pushes from each cluster to the hub (default 300, min 15)
+    interval: 30
   storageConfig:
     metricObjectStorage:
       name: thanos-object-storage
