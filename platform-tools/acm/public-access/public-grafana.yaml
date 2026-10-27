@@ -1,0 +1,194 @@
+# Publishes ACM's own Grafana to the internet through a Cloudflare Quick Tunnel.
+# Anyone with the URL can view every managed cluster's metrics, with no login.
+#
+# ACM's Grafana trusts its OpenShift login proxy for two headers: X-Forwarded-User
+# (who you are) and X-Forwarded-Access-Token (which clusters' metrics you may see,
+# checked by rbac-query-proxy). nginx below sets both, using a read-only service
+# account's token, and points straight at the Grafana container behind that login.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acm-public-grafana
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-viewer
+  namespace: acm-public-grafana
+---
+# rbac-query-proxy only returns metrics for clusters whose namespace and
+# ManagedCluster the caller can read. This gives the viewer the same view as
+# kubeadmin, read-only. It does reveal namespace names and the cluster list.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: acm-public-grafana-viewer
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [get, list]
+  - apiGroups: [project.openshift.io]
+    resources: [projects]
+    verbs: [get, list]
+  - apiGroups: [cluster.open-cluster-management.io]
+    resources: [managedclusters]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: acm-public-grafana-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acm-public-grafana-viewer
+subjects:
+  - kind: ServiceAccount
+    name: grafana-viewer
+    namespace: acm-public-grafana
+---
+# Reaches ACM's Grafana container directly (port 3001), skipping its OpenShift
+# login proxy. ACM's own route and service are untouched.
+apiVersion: v1
+kind: Service
+metadata:
+  name: acm-grafana-direct
+  namespace: open-cluster-management-observability
+spec:
+  selector:
+    app: multicluster-observability-grafana
+  ports:
+    - port: 3001
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: acm-public-grafana
+data:
+  default.conf: |
+    server {
+      listen 8080;
+
+      # ACM's Grafana lets viewers edit dashboards; refuse every write so the
+      # link stays read-only. Panel queries are POSTs to /api/ds/query, so
+      # those are let through.
+      set $write 0;
+      if ($request_method !~ ^(GET|HEAD|OPTIONS)$) { set $write 1; }
+      if ($uri = /api/ds/query) { set $write 0; }
+      if ($write) { return 403; }
+
+      location / {
+        proxy_set_header X-Forwarded-User public-viewer;
+        include /tmp/token.conf;  # X-Forwarded-Access-Token, written by start.sh
+        proxy_pass http://acm-grafana-direct.open-cluster-management-observability.svc:3001;
+      }
+    }
+  # nginx can't re-read a file per request, so this rewrites the token header
+  # and reloads nginx every 5 min. Kubernetes rotates the token well before
+  # its 1h expiry. (Long-lived service-account-token secrets don't work here:
+  # rbac-query-proxy only shows them local-cluster.)
+  start.sh: |
+    #!/bin/sh
+    set -e
+    write_token() {
+      printf 'proxy_set_header X-Forwarded-Access-Token "%s";\n' \
+        "$(cat /var/run/secrets/viewer/token)" > /tmp/token.conf
+    }
+    write_token
+    nginx -g 'daemon off;' &
+    while sleep 300; do write_token; nginx -s reload; done &
+    wait %1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: acm-public-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      serviceAccountName: grafana-viewer
+      containers:
+        - name: nginx
+          image: docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine
+          command: [sh, /etc/start/start.sh]
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - name: config
+              mountPath: /etc/start/start.sh
+              subPath: start.sh
+            - name: viewer-token
+              mountPath: /var/run/secrets/viewer
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: nginx-config
+        - name: viewer-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: acm-public-grafana
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 8080
+---
+# Quick Tunnel: no Cloudflare account; prints a random *.trycloudflare.com URL
+# to its log. The URL changes whenever this pod restarts.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: acm-public-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: docker.io/cloudflare/cloudflared:2026.10.4
+          args: [tunnel, --no-autoupdate, --url, http://nginx:8080]
+          env:
+            # extra CAs, added on top of the image's own (needed behind Cloudflare WARP)
+            - name: SSL_CERT_DIR
+              value: /etc/extra-ca
+          volumeMounts:
+            - name: extra-ca
+              mountPath: /etc/extra-ca
+      volumes:
+        # created by expose.sh; empty if no extra CA is needed
+        - name: extra-ca
+          configMap:
+            name: extra-ca
+            optional: true
