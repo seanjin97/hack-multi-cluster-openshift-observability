@@ -94,4 +94,4 @@ for n in $(seq 1 "$COUNT"); do
   oc wait "managedcluster/spoke-$n" --for=condition=ManagedClusterConditionAvailable --timeout=10m
 done
 oc get managedcluster
-echo "Spokes send metrics every 5 min; give the dashboards ~5-10 min to show them."
+echo "Spokes send metrics every 30s (interval in 04-observability.yaml); give the dashboards a few min to show them."
