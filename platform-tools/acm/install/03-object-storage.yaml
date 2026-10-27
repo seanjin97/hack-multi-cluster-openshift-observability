@@ -1,0 +1,100 @@
+# In-cluster S3 for ACM Observability (Thanos), via Silo (community MinIO fork,
+# https://github.com/pgsty/silo). Local dev only.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: open-cluster-management-observability
+---
+# static creds, in-cluster only. Use real S3 + a secret manager outside local dev.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: silo-creds
+  namespace: open-cluster-management-observability
+stringData:
+  MINIO_ROOT_USER: thanos
+  MINIO_ROOT_PASSWORD: thanos-local-dev
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: silo
+  namespace: open-cluster-management-observability
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: silo
+  namespace: open-cluster-management-observability
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: silo
+  template:
+    metadata:
+      labels:
+        app: silo
+    spec:
+      initContainers:
+        # create the bucket dir up front so Thanos doesn't need to
+        - name: create-bucket
+          image: docker.io/pgsty/silo:RELEASE.2026-10-18T00-00-00Z
+          command: [mkdir, -p, /data/thanos]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      containers:
+        - name: silo
+          image: docker.io/pgsty/silo:RELEASE.2026-10-18T00-00-00Z
+          args: [server, /data]
+          envFrom:
+            - secretRef:
+                name: silo-creds
+          ports:
+            - containerPort: 9000
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: silo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: silo
+  namespace: open-cluster-management-observability
+spec:
+  selector:
+    app: silo
+  ports:
+    - port: 9000
+---
+# Thanos object store config, referenced by the MultiClusterObservability CR
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-object-storage
+  namespace: open-cluster-management-observability
+stringData:
+  thanos.yaml: |
+    type: s3
+    config:
+      bucket: thanos
+      endpoint: silo.open-cluster-management-observability.svc:9000
+      insecure: true
+      access_key: thanos
+      secret_key: thanos-local-dev

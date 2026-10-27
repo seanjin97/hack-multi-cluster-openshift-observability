@@ -1,0 +1,54 @@
+apiVersion: observability.open-cluster-management.io/v1beta2
+kind: MultiClusterObservability
+metadata:
+  name: observability
+spec:
+  # smallest footprint; single-node crc doesn't have room for more
+  instanceSize: minimal
+  observabilityAddonSpec: {}
+  storageConfig:
+    metricObjectStorage:
+      name: thanos-object-storage
+      key: thanos.yaml
+    # defaults are up to 100Gi each, too much for a 100GB crc disk
+    alertmanagerStorageSize: 1Gi
+    compactStorageSize: 5Gi
+    receiveStorageSize: 5Gi
+    ruleStorageSize: 1Gi
+    storeStorageSize: 5Gi
+  # Even "minimal" reserves ~10 CPU cores (store shards ask for 2 each) and
+  # runs 2-3 replicas of everything, which can't schedule on an 8-core crc
+  # node. Real usage is far lower, so shrink requests and run 1 replica each.
+  # tuned for a single dev cluster; drop this block on real hardware.
+  advanced:
+    store:
+      resources: {requests: {cpu: 100m, memory: 256Mi}}
+    query:
+      replicas: 1
+      resources: {requests: {cpu: 100m, memory: 256Mi}}
+    queryFrontend:
+      replicas: 1
+      resources: {requests: {cpu: 50m, memory: 128Mi}}
+    receive:
+      replicas: 1
+      resources: {requests: {cpu: 100m, memory: 512Mi}}
+    rule:
+      replicas: 1
+      resources: {requests: {cpu: 50m, memory: 128Mi}}
+    alertmanager:
+      replicas: 1
+      resources: {requests: {cpu: 20m, memory: 64Mi}}
+    compact:
+      resources: {requests: {cpu: 50m, memory: 256Mi}}
+    observatoriumAPI:
+      replicas: 1
+      resources: {requests: {cpu: 20m, memory: 64Mi}}
+    rbacQueryProxy:
+      replicas: 1
+      resources: {requests: {cpu: 20m, memory: 64Mi}}
+    grafana:
+      replicas: 1
+    storeMemcached:
+      replicas: 1
+    queryFrontendMemcached:
+      replicas: 1

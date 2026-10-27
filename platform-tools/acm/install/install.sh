@@ -6,12 +6,19 @@ cd "$(dirname "$0")"
 # OpenShift Local ships oc but doesn't put it on PATH
 command -v oc >/dev/null || eval "$(crc oc-env)"
 
-echo "Installing ACM. This usually takes 15-20 min in total."
+echo "Installing ACM. This usually takes 20-30 min in total."
 
 oc apply -f 01-operator.yaml
 
 echo "Waiting for ACM operator to register the MultiClusterHub CRD (~2-5 min)..."
-until oc get crd multiclusterhubs.operator.open-cluster-management.io >/dev/null 2>&1; do sleep 10; done
+for i in $(seq 60); do  # 60 x 10s = 10 min
+  oc get crd multiclusterhubs.operator.open-cluster-management.io >/dev/null 2>&1 && break
+  if [ "$i" = 60 ]; then
+    echo "Timed out after 10 min. Check: oc get sub advanced-cluster-management -n open-cluster-management -o yaml" >&2
+    exit 1
+  fi
+  sleep 10
+done
 oc wait --for=condition=Established crd/multiclusterhubs.operator.open-cluster-management.io --timeout=5m
 
 oc apply -f 02-multiclusterhub.yaml
@@ -21,3 +28,13 @@ oc wait mch/multiclusterhub -n open-cluster-management \
   --for=jsonpath='{.status.phase}'=Running --timeout=30m
 
 oc get managedcluster
+
+oc apply -f 03-object-storage.yaml
+echo "Waiting for object storage (~1 min)..."
+oc rollout status deploy/silo -n open-cluster-management-observability --timeout=5m
+
+oc apply -f 04-observability.yaml
+echo "Waiting for MultiClusterObservability to become Ready (~5-10 min)..."
+oc wait mco/observability --for=condition=Ready --timeout=20m
+
+echo "Grafana: https://$(oc get route grafana -n open-cluster-management-observability -o jsonpath='{.spec.host}')"
