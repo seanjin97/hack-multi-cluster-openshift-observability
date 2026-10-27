@@ -17,7 +17,7 @@ spec:
     ruleStorageSize: 1Gi
     storeStorageSize: 5Gi
   # Even "minimal" reserves ~10 CPU cores (store shards ask for 2 each) and
-  # runs 2-3 replicas of everything, which can't schedule on an 8-core crc
+  # runs 2-3 replicas of everything, which can't schedule on a 6-core crc
   # node. Real usage is far lower, so shrink requests and run 1 replica each.
   # tuned for a single dev cluster; drop this block on real hardware.
   advanced:

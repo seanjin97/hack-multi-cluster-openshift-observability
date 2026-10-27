@@ -3,4 +3,22 @@ kind: MultiClusterHub
 metadata:
   name: multiclusterhub
   namespace: open-cluster-management
-spec: {}
+spec:
+  # 1 replica per component instead of 2; fine for a single dev node
+  availabilityConfig: Basic
+  # Only what multicluster observability needs, to fit a 24GB / 6 CPU crc VM.
+  # Re-enable any of these if you need the feature.
+  overrides:
+    components:
+      - name: search             # console Search (postgres alone requests 1Gi)
+        enabled: false
+      - name: app-lifecycle      # Applications / subscriptions
+        enabled: false
+      - name: grc                # Governance policies
+        enabled: false
+      - name: submariner-addon   # cross-cluster networking
+        enabled: false
+      - name: volsync            # volume replication
+        enabled: false
+      - name: insights
+        enabled: false

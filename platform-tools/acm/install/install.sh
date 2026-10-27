@@ -27,6 +27,18 @@ echo "Waiting for MultiClusterHub to reach Running (~10-15 min)..."
 oc wait mch/multiclusterhub -n open-cluster-management \
   --for=jsonpath='{.status.phase}'=Running --timeout=30m
 
+# Turn off MultiClusterEngine's cluster-provisioning features; importing existing
+# clusters doesn't need them. Patched one at a time: a merge patch would replace
+# the whole components list, dropping local-cluster and the rest.
+oc patch mce multiclusterengine --type merge -p '{"spec":{"availabilityConfig":"Basic"}}'
+for c in hive assisted-service discovery hypershift hypershift-local-hosting; do
+  i=$(oc get mce multiclusterengine -o json | python3 -c "import sys,json
+cs=json.load(sys.stdin)['spec']['overrides']['components']
+print(next(n for n,x in enumerate(cs) if x['name']=='$c'))")
+  oc patch mce multiclusterengine --type json \
+    -p "[{\"op\":\"replace\",\"path\":\"/spec/overrides/components/$i/enabled\",\"value\":false}]"
+done
+
 oc get managedcluster
 
 oc apply -f 03-object-storage.yaml

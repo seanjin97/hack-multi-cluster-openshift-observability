@@ -13,9 +13,19 @@
 9. Get `oc` on your PATH: `eval $(crc oc-env)` (add it to `~/.zshrc` to keep it across shells)
 10. Verify `oc` works: `oc login -u developer https://api.crc.testing:6443`
 11. Enable cluster monitoring: `crc config set enable-cluster-monitoring true`
-12. Adjust cpu limits: `crc config set cpus 8`. Adjust accordingly.
-13. Adjust memory limits: `crc config set memory 32768`. 24GB is enough for ACM alone, but not with ACM Observability on top.
+12. Adjust cpu limits: `crc config set cpus 6`.
+13. Adjust memory limits: `crc config set memory 24576`. Enough for ACM and Observability because the install trims unused ACM features (see [Trimmed ACM features](#trimmed-acm-features)) and sizes Observability down.
 14. Adjust disk size: `crc config set disk-size 100`. The default 31GB is too small for ACM (see [Troubleshooting](#troubleshooting)). The disk can only grow, not shrink.
+
+    Budget for the whole setup (crc hub + the [spoke clusters](#spoke-clusters) in Colima), sized for a 14-core / 48GB Mac:
+
+    | VM | CPUs | Memory | Disk |
+    |---|---|---|---|
+    | crc (ACM hub + Observability) | 6 | 24GB | 100GB |
+    | Colima (2 k3s spokes, 2 nodes each) | 4 | 6GB | 20GB |
+    | Left for macOS | 4 | 18GB | |
+
+    Both disks are sparse: they take only what's used, but can grow to the full size. Keep enough free space on the Mac (`df -h /`) for that, or crc hits `DiskPressure`. `crc status` shows real usage; with ACM and Observability it's about 18 of 24GB RAM and 50GB disk. On a smaller Mac, lower crc's memory last; Observability needs it.
 15. Restart cluster to get the updated limits: `crc stop`, `crc start`.
 16. Verify that limits are updated: `crc config view`
 17. Verify that Prometheus is installed: `oc get pods -n openshift-monitoring | grep prometheus`
@@ -73,6 +83,41 @@ Data sources come from the `grafana-datasources` secret. Both (`Observatorium`, 
 - **Editing in the UI:** changes to ACM-shipped dashboards can be overwritten from their configmaps when the operator reconciles. Export anything you want to keep into a custom dashboard configmap.
 - **Grafana settings and data sources:** these secrets are operator-managed and hand edits get reverted. Change them through the `MultiClusterObservability` resource instead.
 
+### Sharing ACM's Grafana publicly, read-only
+`./platform-tools/acm/public-access/expose.sh` publishes ACM's own Grafana through a Cloudflare Quick Tunnel and prints a `https://*.trycloudflare.com` link. It's the same Grafana, dashboards and data as the in-cluster one, so nothing drifts.
+- **Anyone with the link can view every managed cluster's metrics, with no login.** They're signed in as `public-viewer`.
+- **Read-only is enforced by nginx, not Grafana.** ACM's Grafana lets viewers edit, so nginx refuses every request except reads and panel queries (`POST /api/ds/query`); attempts to save or delete get a 403.
+- The tunnel runs in the cluster, so nothing needs installing on your Mac and no Cloudflare account is needed. The link only works while crc is running.
+- The link changes whenever the `cloudflared` pod restarts, for example after `crc stop`/`crc start`. Re-run `expose.sh` to get the new one.
+- To take it down: `oc delete -f platform-tools/acm/public-access/public-grafana.yaml`
+
+How it works: ACM's Grafana sits behind an OpenShift login proxy and trusts two headers from it, `X-Forwarded-User` (who you are) and `X-Forwarded-Access-Token` (sent on to `rbac-query-proxy`, which decides which clusters' metrics you see). The nginx pod skips that login, talks to the Grafana container directly, and sets both headers using the `grafana-viewer` service account. That account can read all namespaces, projects and ManagedClusters (`acm-public-grafana-viewer` ClusterRole), which makes the proxy return every cluster, read-only.
+- Its token is short-lived and rotated by Kubernetes; nginx re-reads it every 5 min. A long-lived `service-account-token` secret doesn't work: `rbac-query-proxy` only shows those `local-cluster`.
+
+## Spoke clusters
+crc is the only OpenShift cluster (the ACM hub). The spokes are real, lightweight [k3s](https://k3s.io) clusters run by [k3d](https://k3d.io) in Docker, imported into ACM like any other cluster.
+
+1. `brew install k3d`
+2. Start Docker with room for the spokes: `colima start --cpu 4 --memory 6 --disk 20` (see the [budget](#openshift-local-setup) under step 14). Colima's disk can't shrink, so if `colima list` shows `Broken` or a bigger disk (the existing VM has 100GiB), run `colima delete` first
+3. `./platform-tools/acm/spoke-clusters/spokes.sh [count]` (default 2). Behind Cloudflare WARP, prefix it with the same `CA=...` as step 18.
+4. `oc get managedcluster` shows `spoke-1`, `spoke-2` as `JOINED` and `AVAILABLE`. Metrics show up in Grafana ~5-10 min later.
+
+What you get:
+- Each `spoke-N` has 2 nodes (1 server, 1 agent), with traefik, servicelb and metrics-server turned off to save memory.
+- ACM installs its observability addon on each one (`open-cluster-management-addon-observability`): a small Prometheus, kube-state-metrics and node-exporter, pushing to the hub every 5 min.
+- Sample apps in the `demo` namespace, so each cluster's graphs look different: `spoke-1` runs podinfo (frontend → backend), `spoke-2` runs nginx and redis. Both have a tiny load generator. Edit `apps/spoke-N.yaml` to change them.
+- Use a spoke with `kubectl --context k3d-spoke-1 ...` (or `oc --context`). The script doesn't switch your current context, so `oc` stays on the hub.
+- `./spokes.sh 0` removes them all, from ACM and k3d.
+
+How they reach the hub: crc's `api.crc.testing` and `*.apps-crc.testing` resolve to the Mac's `127.0.0.1`. The script maps those names, inside each k3s cluster, to Docker's host gateway, which is the Mac. The spokes pull ACM's agent images from `registry.redhat.io` using crc's own pull secret.
+
+## Trimmed ACM features
+To fit a small crc VM, `02-multiclusterhub.yaml` and `install.sh` turn off ACM features this repo doesn't use, and run 1 replica of each component:
+- ACM: Search, Applications, Governance, Submariner, VolSync, Insights
+- MultiClusterEngine: Hive, Assisted Installer, Discovery, HyperShift (cluster provisioning; importing existing clusters still works)
+
+To bring one back, set its `enabled` to `true` (in `02-multiclusterhub.yaml`, or with `oc edit mce multiclusterengine`).
+
 ## Troubleshooting
 
 ### ACM install hangs at "Waiting for ACM operator to register the MultiClusterHub CRD"
@@ -93,7 +138,7 @@ Data sources come from the `grafana-datasources` secret. Both (`Observatorium`, 
 
 ### Observability install times out at "Waiting for MultiClusterObservability to become Ready"
 - Symptom: `observability-*` pods in `open-cluster-management-observability` stuck `Pending`; their events say `Insufficient cpu` or `Insufficient memory`.
-- Cause: ACM's default sizing reserves ~10 CPU cores and 2-3 replicas of every component, more than a single 8-core crc node has. `04-observability.yaml` shrinks this; if you changed it, or a node is still short, check `oc describe node crc | grep -A5 'Allocated resources'`.
+- Cause: ACM's default sizing reserves ~10 CPU cores and 2-3 replicas of every component, more than a single 6-core crc node has. `04-observability.yaml` shrinks this; if you changed it, or a node is still short, check `oc describe node crc | grep -A5 'Allocated resources'`.
 - If you lower resources in `04-observability.yaml` after pods are already `Pending`, the StatefulSet won't replace them. Delete them so they come back with the new values:
   ```
   oc delete pod -n open-cluster-management-observability --field-selector=status.phase=Pending
