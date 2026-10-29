@@ -1,3 +1,12 @@
+# Architecture
+![Multicluster observability architecture](observability.svg)
+
+Everything runs on one Mac. The diagram's source is `observability.d2`; re-render with `d2 --layout elk observability.d2 observability.svg`.
+- **Hub**: the crc VM runs OpenShift with ACM and its observability stack: Thanos, with Silo as S3 storage, and Grafana. See [Openshift-local setup](#openshift-local-setup) and [Trimmed ACM features](#trimmed-acm-features).
+- **Spokes**: two k3d clusters run in Colima's Docker, imported into ACM. Each runs ACM's observability addon, whose metrics-collector pushes to the hub's `observatorium-api` every 30s. See [Spoke clusters](#spoke-clusters).
+- **App metrics**: any container port named `metrics` is scraped and forwarded. Kyverno enforces that port in L1 namespaces. See [doc/golden-path/metrics.md](doc/golden-path/metrics.md).
+- **Reading**: Grafana queries Thanos through `rbac-query-proxy`, which filters by cluster. See [Grafana](#grafana). A read-only public copy goes out through a Cloudflare tunnel; see [Sharing ACM's Grafana publicly, read-only](#sharing-acms-grafana-publicly-read-only).
+
 # Tools required
 | Tool | For | Install |
 |---|---|---|

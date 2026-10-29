@@ -1,0 +1,158 @@
+# Multicluster observability: crc ACM hub + 2 k3s spokes, all on one Mac.
+# Render: d2 --layout elk observability.d2 observability.svg
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+  i-prom: "https://raw.githubusercontent.com/cncf/artwork/main/projects/prometheus/icon/color/prometheus-icon-color.svg"
+  i-thanos: "https://raw.githubusercontent.com/cncf/artwork/main/projects/thanos/icon/color/thanos-icon-color.svg"
+  i-k8s: "https://raw.githubusercontent.com/cncf/artwork/main/projects/kubernetes/icon/color/kubernetes-icon-color.svg"
+  i-k3s: "https://raw.githubusercontent.com/cncf/artwork/main/projects/k3s/icon/color/k3s-icon-color.svg"
+  i-grafana: "https://cdn.simpleicons.org/grafana"
+  i-openshift: "https://cdn.simpleicons.org/redhatopenshift"
+  i-redhat: "https://cdn.simpleicons.org/redhat"
+  i-cloudflare: "https://cdn.simpleicons.org/cloudflare"
+  i-nginx: "https://cdn.simpleicons.org/nginx"
+  i-redis: "https://cdn.simpleicons.org/redis"
+  i-minio: "https://cdn.simpleicons.org/minio"
+  i-apple: "https://cdn.simpleicons.org/apple"
+  i-docker: "https://cdn.simpleicons.org/docker"
+  i-laptop: "https://icons.terrastruct.com/tech%2Flaptop.svg"
+}
+direction: down
+
+classes: {
+  store: {shape: cylinder}
+  person: {shape: person}
+  demo: {style: {stroke-dash: 3}}
+}
+
+user: Browser {class: person}
+public: Public viewer {class: person}
+cloudflare: Cloudflare Quick Tunnel\n*.trycloudflare.com {shape: cloud; icon: ${i-cloudflare}}
+
+mac: Mac (localhost) {
+  icon: ${i-apple}
+  crc: crc VM: OpenShift Local (6 CPU / 24GB)\nACM hub, context crc-admin {
+    icon: ${i-openshift}
+    acm: open-cluster-management / multicluster-engine {
+      icon: ${i-redhat}
+      mch: MultiClusterHub\n(trimmed: no search, grc, apps)
+      registration: Cluster registration\n+ import secrets
+      addon_mgr: Addon manager
+    }
+
+    local: local-cluster (the hub manages itself) {
+      icon: ${i-openshift}
+      platform_prom: openshift-monitoring\nPrometheus {icon: ${i-prom}}
+      local_collector: metrics-collector\n(federates allowlisted metrics)
+      platform_prom -> local_collector: federate
+    }
+
+    obs: open-cluster-management-observability (MultiClusterObservability, instanceSize: minimal, 1 replica each) {
+      api: observatorium-api\n(route: observatorium-api) {icon: ${i-thanos}}
+      receive: thanos-receive {icon: ${i-thanos}}
+      rule: thanos-rule {icon: ${i-thanos}}
+      alertmanager: alertmanager {icon: ${i-prom}}
+      query_fe: thanos-query-frontend\n+ memcached {icon: ${i-thanos}}
+      query: thanos-query {icon: ${i-thanos}}
+      store: thanos-store x3 shards\n+ memcached {icon: ${i-thanos}}
+      compact: thanos-compact\n(downsample, retention) {icon: ${i-thanos}}
+      rbac: rbac-query-proxy\n(filters by cluster the user may see)
+      grafana: Grafana\n(+ OpenShift OAuth proxy, ~58 ACM dashboards) {icon: ${i-grafana}}
+      silo: Silo (MinIO fork)\nS3 object storage {class: [store; demo]; icon: ${i-minio}}
+
+      api -> receive: remote write
+      receive -> silo: upload 2h blocks
+      store -> silo: read blocks
+      compact -> silo: compact / downsample
+      rule -> alertmanager: alerts
+      query -> receive: recent data
+      query -> store: older data
+      query -> rule
+      query_fe -> query
+      rbac -> query_fe
+      grafana -> rbac: PromQL + user token
+    }
+
+    public_ns: acm-public-grafana {
+      nginx: nginx (read-only)\nas grafana-viewer SA {class: demo; icon: ${i-nginx}}
+      cloudflared: cloudflared {class: demo; icon: ${i-cloudflare}}
+      cloudflared -> nginx
+    }
+    public_ns.nginx -> obs.grafana: skips OAuth proxy
+
+    local.local_collector -> obs.api
+
+    acm.addon_mgr -> obs: MCO enables\nobservability addon\non every cluster {style.stroke-dash: 3}
+  }
+
+  colima: Colima VM: Docker (4 CPU / 6GB) {
+    icon: ${i-docker}
+    spoke1: k3d spoke-1 (k3s, 1 server + 1 agent)\ncontext k3d-spoke-1 {
+      icon: ${i-k3s}
+      agent: open-cluster-management-agent\nklusterlet {icon: ${i-redhat}}
+      addon: open-cluster-management-addon-observability {
+        prom: Prometheus\n(prometheus-operator) {icon: ${i-prom}}
+        ksm: kube-state-metrics {icon: ${i-k8s}}
+        ne: node-exporter\n(per node) {icon: ${i-prom}}
+        collector: metrics-collector\n(default + custom allowlist)
+        podmon: PodMonitor app-metrics\n(any port named "metrics")
+        ksm -> prom: scrape
+        ne -> prom: scrape
+        podmon -> prom: config
+        prom -> collector: federate
+      }
+      kyverno: Kyverno admission\n(L1: pods need a "metrics" port)
+      apps: spoke-1-demo (L1)\npodinfo frontend/backend + loadgen {class: demo}
+      kubelet: kubelet + cAdvisor\n(per node)
+      kyverno -> apps: reject pods without\na metrics port {style.stroke-dash: 3}
+      apps -> addon.prom: scrape podinfo /metrics
+      apps -> kubelet: containers run on nodes {style.stroke-dash: 3}
+      kubelet -> addon.prom: scrape CPU / memory / network\nper container
+      apps -> addon.ksm: pod / deployment state\nvia API server {style.stroke-dash: 3}
+    }
+
+    spoke2: k3d spoke-2 (k3s, 1 server + 1 agent)\ncontext k3d-spoke-2 {
+      icon: ${i-k3s}
+      agent: open-cluster-management-agent\nklusterlet {icon: ${i-redhat}}
+      addon: open-cluster-management-addon-observability {
+        prom: Prometheus\n(prometheus-operator) {icon: ${i-prom}}
+        ksm: kube-state-metrics {icon: ${i-k8s}}
+        ne: node-exporter\n(per node) {icon: ${i-prom}}
+        collector: metrics-collector\n(default + custom allowlist)
+        podmon: PodMonitor app-metrics\n(any port named "metrics")
+        ksm -> prom: scrape
+        ne -> prom: scrape
+        podmon -> prom: config
+        prom -> collector: federate
+      }
+      kyverno: Kyverno admission\n(L1: pods need a "metrics" port)
+      apps: spoke-2-demo (L1)\nnginx + redis + loadgen {class: demo; icon: ${i-redis}}
+      kubelet: kubelet + cAdvisor\n(per node)
+      kyverno -> apps: reject pods without\na metrics port {style.stroke-dash: 3}
+      apps -> addon.prom: scrape nginx + redis exporter sidecars
+      apps -> kubelet: containers run on nodes {style.stroke-dash: 3}
+      kubelet -> addon.prom: scrape CPU / memory / network\nper container
+      apps -> addon.ksm: pod / deployment state\nvia API server {style.stroke-dash: 3}
+    }
+  }
+
+  # Spokes reach crc via Docker's host gateway (host aliases in k3d-cluster.yaml)
+  colima.spoke1.agent -> crc.acm.registration: register / heartbeat\napi.crc.testing:6443
+  colima.spoke2.agent -> crc.acm.registration
+  crc.acm -> colima.spoke1.addon.podmon: ManifestWork app-metrics {style.stroke-dash: 3}
+  crc.acm -> colima.spoke2.addon.podmon {style.stroke-dash: 3}
+  colima.spoke1.addon.collector -> crc.obs.api: push every 30s (mTLS)\nobservatorium-api route :443
+  colima.spoke2.addon.collector -> crc.obs.api
+}
+
+user -> mac.crc.obs.grafana: grafana-open-cluster-management-observability\n.apps-crc.testing (OpenShift login)
+public -> cloudflare
+cloudflare -> mac.crc.public_ns.cloudflared: outbound tunnel
+
+legend: Legend {
+  near: bottom-left
+  a: Solid box: same as a production ACM setup
+  b: Dashed box: demo-only {class: demo}
+}
