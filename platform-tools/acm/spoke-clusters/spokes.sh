@@ -9,6 +9,8 @@
 # Files:
 #   k3d-cluster.yaml               the k3s cluster (2 nodes), shared by every spoke
 #   spoke-N/managed-cluster.yaml   registers spoke-N with ACM (applied to the hub)
+#   metrics/manifestwork.yaml      scrape + forward every pod's "metrics" port (hub -> every spoke)
+#   kyverno/                       admission-only Kyverno + the L1 metrics policy (every spoke)
 #   spoke-N/kustomization.yaml     spoke-N's sample apps (applied to the spoke)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -52,6 +54,13 @@ for dir in spoke-*/; do
   oc get secret "$SPOKE-import" -n "$SPOKE" -o jsonpath='{.data.crds\.yaml}' | base64 -d | oc --context "$ctx" apply -f -
   oc --context "$ctx" wait crd/klusterlets.operator.open-cluster-management.io --for=condition=Established --timeout=2m
   oc get secret "$SPOKE-import" -n "$SPOKE" -o jsonpath='{.data.import\.yaml}' | base64 -d | oc --context "$ctx" apply -f -
+
+  # Per-pod metrics (ACM's Prometheus scrapes every port named "metrics"), and
+  # Kyverno enforcing that port in L1 namespaces, before the apps it checks
+  oc apply -n "$SPOKE" -f metrics/manifestwork.yaml
+  oc --context "$ctx" apply -k kyverno --server-side
+  oc --context "$ctx" rollout status deploy/kyverno-admission-controller -n kyverno --timeout=5m
+  oc --context "$ctx" apply -f kyverno/require-metrics-port.yaml
 
   oc --context "$ctx" apply -k "$SPOKE"
 done

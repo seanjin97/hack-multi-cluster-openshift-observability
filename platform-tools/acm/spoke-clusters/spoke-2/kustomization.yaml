@@ -2,3 +2,6 @@
 namespace: spoke-2-demo
 resources:
   - apps.yaml
+configMapGenerator:
+  - name: nginx-status
+    files: [nginx-status.conf]

@@ -1,7 +1,9 @@
 # nginx + redis, nginx spread over both nodes, plus a tiny load generator
 apiVersion: v1
 kind: Namespace
-metadata: {name: spoke-2-demo}
+metadata:
+  name: spoke-2-demo
+  labels: {golden-path.level: L1}   # every pod must expose a "metrics" port
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -18,6 +20,14 @@ spec:
         - name: nginx
           image: nginx:1.27-alpine
           resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 32Mi}}
+          volumeMounts: [{name: status, mountPath: /etc/nginx/conf.d/status.conf, subPath: nginx-status.conf}]
+        # nginx has no Prometheus endpoint; the exporter turns stub_status into one
+        - name: exporter
+          image: nginx/nginx-prometheus-exporter:1.4.2
+          args: [--nginx.scrape-uri=http://127.0.0.1:8080/stub_status]
+          ports: [{name: metrics, containerPort: 9113}]
+          resources: {requests: {cpu: 5m, memory: 16Mi}, limits: {cpu: 20m, memory: 32Mi}}
+      volumes: [{name: status, configMap: {name: nginx-status}}]
 ---
 apiVersion: v1
 kind: Service
@@ -40,6 +50,10 @@ spec:
           image: redis:7-alpine
           args: [--maxmemory, 32mb, --save, ""]
           resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 48Mi}}
+        - name: exporter
+          image: oliver006/redis_exporter:v1.67.0   # reads redis on localhost:6379
+          ports: [{name: metrics, containerPort: 9121}]
+          resources: {requests: {cpu: 5m, memory: 16Mi}, limits: {cpu: 20m, memory: 32Mi}}
 ---
 apiVersion: v1
 kind: Service
@@ -55,7 +69,9 @@ spec:
   replicas: 1
   selector: {matchLabels: {app: loadgen}}
   template:
-    metadata: {labels: {app: loadgen}}
+    metadata:
+      labels: {app: loadgen}
+      annotations: {golden-path/metrics-exempt: "shell load generator, no metrics to expose"}
     spec:
       containers:
         - name: load

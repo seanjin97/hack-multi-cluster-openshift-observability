@@ -1,7 +1,9 @@
 # podinfo frontend -> backend, frontends spread over both nodes, plus a tiny load generator
 apiVersion: v1
 kind: Namespace
-metadata: {name: spoke-1-demo}
+metadata:
+  name: spoke-1-demo
+  labels: {golden-path.level: L1}   # every pod must expose a "metrics" port
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -16,6 +18,7 @@ spec:
         - name: podinfo
           image: ghcr.io/stefanprodan/podinfo:6.7.1
           command: [./podinfo, --port=9898]
+          ports: [{name: metrics, containerPort: 9898}]   # podinfo serves /metrics natively
           resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 50m, memory: 64Mi}}
 ---
 apiVersion: v1
@@ -40,6 +43,7 @@ spec:
         - name: podinfo
           image: ghcr.io/stefanprodan/podinfo:6.7.1
           command: [./podinfo, --port=9898, --backend-url=http://backend:9898/echo]
+          ports: [{name: metrics, containerPort: 9898}]
           resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 50m, memory: 64Mi}}
 ---
 apiVersion: v1
@@ -56,7 +60,9 @@ spec:
   replicas: 1
   selector: {matchLabels: {app: loadgen}}
   template:
-    metadata: {labels: {app: loadgen}}
+    metadata:
+      labels: {app: loadgen}
+      annotations: {golden-path/metrics-exempt: "busybox load generator, no metrics to expose"}
     spec:
       containers:
         - name: wget

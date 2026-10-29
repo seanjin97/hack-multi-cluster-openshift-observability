@@ -1,0 +1,44 @@
+# Per-pod app metrics for one spoke, delivered from the hub so ACM's work agent
+# re-creates them if the addon namespace is ever reinstalled.
+# Apply to the hub, in the spoke's namespace: oc apply -n spoke-N -f metrics/manifestwork.yaml
+apiVersion: work.open-cluster-management.io/v1
+kind: ManifestWork
+metadata:
+  name: app-metrics
+spec:
+  workload:
+    manifests:
+      # Lets ACM's work agent manage the PodMonitor below (it retries until this exists)
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: open-cluster-management:work:podmonitors
+          labels: {open-cluster-management.io/aggregate-to-work: "true"}
+        rules: [{apiGroups: [monitoring.coreos.com], resources: [podmonitors], verbs: ["*"]}]
+      # ACM's spoke Prometheus selects every PodMonitor in its own namespace:
+      # scrape every container port named "metrics", in every namespace
+      - apiVersion: monitoring.coreos.com/v1
+        kind: PodMonitor
+        metadata: {name: app-metrics, namespace: open-cluster-management-addon-observability}
+        spec:
+          namespaceSelector: {any: true}
+          selector: {}
+          podMetricsEndpoints: [{port: metrics}]
+      # ACM's collector only forwards allowlisted series: forward all of the above
+      - apiVersion: v1
+        kind: ConfigMap
+        metadata: {name: observability-metrics-custom-allowlist, namespace: open-cluster-management-addon-observability}
+        data:
+          metrics_list.yaml: |
+            matches:
+              - job="open-cluster-management-addon-observability/app-metrics"
+      # ACM's Prometheus can only see its own namespace; let it discover pods everywhere
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata: {name: prometheus-k8s-app-metrics}
+        rules: [{apiGroups: [""], resources: [pods], verbs: [get, list, watch]}]
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata: {name: prometheus-k8s-app-metrics}
+        roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: prometheus-k8s-app-metrics}
+        subjects: [{kind: ServiceAccount, name: prometheus-k8s, namespace: open-cluster-management-addon-observability}]
