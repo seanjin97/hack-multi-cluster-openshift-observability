@@ -5,11 +5,14 @@ apiVersion: cluster.open-cluster-management.io/v1
 kind: ManagedCluster
 metadata:
   name: spoke-1
+  # vendor/cloud are what ACM detects for k3s. Not "auto-detect": re-applying that
+  # on a re-run briefly hides the cluster from ACM Observability, which uninstalls
+  # its addon. Not omitted either: apply would remove ACM's detected value.
   labels:
     spoke-cluster: "true"
     name: spoke-1
-    cloud: auto-detect
-    vendor: auto-detect
+    vendor: Other
+    cloud: Other
     cluster.open-cluster-management.io/clusterset: default
 spec:
   hubAcceptsClient: true
