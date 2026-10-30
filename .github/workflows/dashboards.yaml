@@ -1,0 +1,33 @@
+# Gate for the central dashboards repo (ADR 0004). ArgoCD syncs whatever lands on main,
+# so main must only ever hold dashboards that follow the standard and match their source.
+# Devs only need the generators and uv; the cluster is never touched here.
+name: dashboards
+on:
+  pull_request:
+    paths: [platform-tools/grafana/dashboards/**]
+  push:
+    branches: [main]
+    paths: [platform-tools/grafana/dashboards/**]
+defaults:
+  run:
+    working-directory: platform-tools/grafana/dashboards
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # Gate 1: every dashboard follows the standard (layout, filters, windows, units, built-in links),
+      # and the builders behave as the tests describe.
+      - name: Tests pass
+        run: uv run pytest -q
+      # Gate 2: the build changes nothing. If build.py writes, adds or deletes any file, the dev
+      # didn't run it locally (or edited its output by hand): JSON and kustomization.yaml must be committed.
+      - name: Build was run locally and committed
+        run: |
+          uv run build.py
+          if [ -n "$(git status --porcelain -- .)" ]; then
+            git status --short -- .
+            echo "::error::Run 'uv run build.py' locally and commit the result. Never edit .json or kustomization.yaml."
+            exit 1
+          fi
