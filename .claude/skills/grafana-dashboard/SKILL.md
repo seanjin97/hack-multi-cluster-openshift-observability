@@ -37,7 +37,7 @@ Look for the directory holding `standard.py`, `build.py` and `acm-builtin.md`. I
 4. **Reuse before you build** (see Built-in dashboards).
 5. **Write the `.py` with `standard.py` helpers only.** Never call SDK builders directly. If the standard lacks something, stop and tell the user. A change to `standard.py` is a separate, platform-reviewed MR with its own tests, not part of a dashboard.
 6. **Build locally:** `uv run build.py`, from the dashboards directory. If it fails, the message names the panel and the rule. Fix the `.py`; never work around the rule.
-7. **Run the gate CI will run:** `uv run pytest` and `uv run build.py --check`. Both must pass.
+7. **Run the tests CI will run:** `uv run pytest` must pass. Commit everything `build.py` wrote; CI rebuilds and fails if that changes any file.
 8. **Hand off.** Tell the user:
    - the files to commit: `.py`, `.json`, `kustomization.yaml`, and the allowlist if changed;
    - the dashboard's future URL;
@@ -48,7 +48,7 @@ Look for the directory holding `standard.py`, `build.py` and `acm-builtin.md`. I
 | Gate | Command | Fails when |
 |---|---|---|
 | Tests pass | `uv run pytest` | A dashboard breaks the standard (layout, filters, time windows, units, descriptions, built-in links), or a builder's behaviour changed |
-| JSON is generated and committed | `uv run build.py --check` | A `.py` has no committed `.json`, a `.json` was hand-edited, `kustomization.yaml` is stale, or a `.json` outlived its `.py` |
+| Build was run locally and committed | `uv run build.py`, then no file may change | `build.py` writes a `.json` that wasn't committed, overwrites a hand-edited one, updates a stale `kustomization.yaml`, or deletes a `.json` whose `.py` is gone |
 
 ## Page structure
 ```
