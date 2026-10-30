@@ -1,0 +1,17 @@
+# Dependencies for the dashboard generators (ADR 0004). uv reads this; no venv to manage by hand.
+#   uv run build.py          build dashboards
+#   uv run pytest            behaviour tests
+[project]
+name = "starforge-dashboards"
+version = "0"
+requires-python = ">=3.11"
+dependencies = [
+    "grafana-foundation-sdk==0.0.21",  # 0.0.x follows the SDK's main, for Grafana >= 12 (ACM ships 12.4)
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]

@@ -14,6 +14,7 @@ Everything runs on one Mac. The diagram's source is `observability.d2`; re-rende
 | `oc` | Talking to all 3 clusters, hub and spokes. No need for `kubectl` | Ships with crc, step 9 below |
 | Docker | Runs the k3s spoke nodes as containers. Any Docker works; this guide uses [Colima](https://github.com/abiosoft/colima) | `brew install colima docker` |
 | `k3d` | Creates the k3s spoke clusters | `brew install k3d` |
+| `uv` | Generates Grafana dashboards from Python ([ADR 0004](doc/decisions/0004-dashboards-as-code.md)) | `brew install uv` |
 
 The scripts also use `python3` and `base64`, and the metrics query below uses `curl`. All come with macOS (`python3` via the Xcode command line tools).
 
@@ -99,6 +100,7 @@ Data sources come from the `grafana-datasources` secret. Both (`Observatorium`, 
 
 ### Customizing
 - **Custom dashboards:** create a configmap in `open-cluster-management-observability` labelled `grafana-custom-dashboard: "true"`, holding the dashboard JSON. The loader picks it up. This is the supported way, and it keeps dashboards in git.
+  Ours are written in Python and generated, never hand-edited: `platform-tools/grafana/dashboards/`, synced to the hub by ArgoCD on merge to `main` (`platform-tools/grafana/gitops/`; locally: `oc apply -k platform-tools/grafana/dashboards`). They're grouped by team, `dashboards/<team>/<name>.py`, and show under **Dashboards → `<team>`**. Flow from code to Grafana: [dashboards/README.md](platform-tools/grafana/dashboards/README.md). To add or change one, ask Claude (`grafana-dashboard` skill, [ADR 0004](doc/decisions/0004-dashboards-as-code.md)).
 - **Editing in the UI:** changes to ACM-shipped dashboards can be overwritten from their configmaps when the operator reconciles. Export anything you want to keep into a custom dashboard configmap.
 - **Grafana settings and data sources:** these secrets are operator-managed and hand edits get reverted. Change them through the `MultiClusterObservability` resource instead.
 

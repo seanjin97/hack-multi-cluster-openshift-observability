@@ -1,0 +1,16 @@
+# Raw series the platform dashboards need on top of ACM's default allowlist.
+# Hub-wide: ACM merges this into every cluster's collector, local-cluster included.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-metrics-custom-allowlist
+data:
+  metrics_list.yaml: |
+    names:
+      - container_cpu_usage_seconds_total             # per-pod CPU, provisioning and team rows
+      - container_network_receive_bytes_total         # noisy-neighbour pods
+      - container_network_transmit_bytes_total
+      - container_network_receive_packets_dropped_total
+      - container_network_transmit_packets_dropped_total
+      - kube_pod_status_phase                         # pods not running
+      - kube_pod_container_status_restarts_total      # restarts
