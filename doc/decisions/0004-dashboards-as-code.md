@@ -103,6 +103,14 @@ The dashboard is still raw JSON (`config_json`), just wrapped in a provider, so 
 - **Grafana upgrades:** after ACM upgrades Grafana, bump the SDK pin and regenerate. Panels that fail to build show what changed.
 - **One target:** the skill emits only ACM ConfigMaps. Dashboards that exist today as `GrafanaDashboard` CRs stay where they are until someone ports them to code.
 
+## Dashboard schema: classic, not v2 (checked 2026-10-30)
+- **Decision:** build with the SDK's classic `dashboard.Dashboard`, the schema ACM's Grafana loads. The SDK's "Prefer using dashboardv2.Dashboard" deprecation warning is expected.
+- **Why not `dashboardv2.Dashboard`:** tested on the hub with a one-panel v2 dashboard, delivered as a ConfigMap like any other:
+  - ACM's `grafana-dashboard-loader` reported success, but it posts to the classic `/api/dashboards/db`.
+  - Grafana stored it as a classic dashboard (`storedVersion: v0alpha1`) and dropped `elements` and `layout`, so it opened empty.
+  - v2 storage and layouts are behind Grafana feature toggles that are off here. ACM's operator owns `grafana.ini` and reverts edits.
+- **Revisit when** ACM's loader writes through Grafana's v2 API, or ACM enables the v2 toggles. Panels go through `standard.py` helpers, so a move mostly changes `standard.py`, not team dashboards.
+
 ## Sources
 - Grafana Foundation SDK (Grafana >= 12 note, public-preview status, Python builders): https://github.com/grafana/grafana-foundation-sdk
 - Python install and example: https://github.com/grafana/grafana-foundation-sdk/blob/main/python/README.md
@@ -110,3 +118,4 @@ The dashboard is still raw JSON (`config_json`), just wrapped in a provider, so 
 - Grafonnet (generated from the SDK, experimental): https://github.com/grafana/grafonnet
 - grafonnet-lib (deprecated): https://github.com/grafana/grafonnet-lib
 - uv projects (`pyproject.toml`, `uv.lock`): https://docs.astral.sh/uv/concepts/projects/
+- ACM dashboard loader (posts to `/api/dashboards/db`): https://github.com/stolostron/multicluster-observability-operator/blob/main/loaders/dashboards/pkg/controller/grafana_client.go
