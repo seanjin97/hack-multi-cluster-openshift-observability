@@ -2812,7 +2812,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Per endpoint, over the selected time range, from the golden-path histogram http_request_duration_seconds, labelled path, method, status. Missing your app? See doc/golden-path/metrics.md.",
+          "description": "Per endpoint, over the selected time range, from the golden-path histogram http_request_duration_seconds, labelled path, method, status. Missing your app? See doc/app-teams/1-metrics.md.",
           "fieldConfig": {
             "defaults": {
               "custom": {

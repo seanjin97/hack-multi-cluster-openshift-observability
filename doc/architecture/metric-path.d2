@@ -1,0 +1,51 @@
+# How an app's metric reaches a dashboard. Render: d2 --layout elk metric-path.d2 metric-path.svg
+vars: {
+  d2-config: {layout-engine: elk}
+  i-prom: "https://raw.githubusercontent.com/cncf/artwork/main/projects/prometheus/icon/color/prometheus-icon-color.svg"
+  i-thanos: "https://raw.githubusercontent.com/cncf/artwork/main/projects/thanos/icon/color/thanos-icon-color.svg"
+  i-k3s: "https://raw.githubusercontent.com/cncf/artwork/main/projects/k3s/icon/color/k3s-icon-color.svg"
+  i-grafana: "https://cdn.simpleicons.org/grafana"
+  i-openshift: "https://cdn.simpleicons.org/redhatopenshift"
+}
+direction: right
+
+classes: {
+  team: {style: {fill: "#e8f4ea"; stroke: "#2e7d32"}}
+  store: {shape: cylinder}
+}
+
+spoke: Spoke cluster (any) {
+  icon: ${i-k3s}
+  app: "Your app pod\nport named 'metrics'\n/metrics: submissions_total{outcome}" {class: team}
+  kubelet: kubelet + cAdvisor\nCPU / memory / network
+  ksm: kube-state-metrics\npods, requests, restarts
+  addon: open-cluster-management-addon-observability {
+    podmon: PodMonitor app-metrics\n(every port named "metrics")
+    prom: Prometheus {icon: ${i-prom}}
+    collector: metrics-collector\nACM allowlist + custom allowlist
+    podmon -> prom: scrape config
+    prom -> collector: federate
+  }
+  app -> addon.prom: scrape every 30s
+  kubelet -> addon.prom: scrape
+  ksm -> addon.prom: scrape
+}
+
+hub: Hub (ACM) {
+  icon: ${i-openshift}
+  api: observatorium-api {icon: ${i-thanos}}
+  thanos: Thanos receive / store {class: store; icon: ${i-thanos}}
+  rbac: rbac-query-proxy\nonly clusters you may see
+  grafana: ACM Grafana\nyour team's folder {icon: ${i-grafana}}
+  api -> thanos
+  grafana -> rbac: PromQL + your token
+  rbac -> thanos
+}
+
+spoke.addon.collector -> hub.api: push every 30s (mTLS)
+
+legend: {
+  near: bottom-center
+  t: Green: what your team owns {class: team}
+  n: "Everything else: platform, already in place. ~1 min from emit to dashboard."
+}

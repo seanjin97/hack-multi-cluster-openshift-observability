@@ -9,7 +9,7 @@ REQ = per_pod(f'kube_pod_container_resource_requests{{{C}, resource="cpu"}}')
 LIMIT = per_pod(f'kube_pod_container_resource_limits{{{C}, resource="cpu"}}')
 THROTTLED = lambda w=RATE: per_pod(f"rate(container_cpu_cfs_throttled_periods_total{{{C}, {REAL}}}[{w}])")  # noqa: E731
 PERIODS = lambda w=RATE: per_pod(f"rate(container_cpu_cfs_periods_total{{{C}, {REAL}}}[{w}])")  # noqa: E731
-# Golden-path app metrics (doc/golden-path/metrics.md)
+# Golden-path app metrics (doc/app-teams/1-metrics.md)
 REQS = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_count{{{C}, {APP}}}[{w}])")  # noqa: E731
 ERRS = lambda w=RATE: per_pod(f'rate(http_request_duration_seconds_count{{{C}, {APP}, status=~"5.."}}[{w}])')  # noqa: E731
 LAT = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_bucket{{{C}, {APP}}}[{w}])")  # noqa: E731

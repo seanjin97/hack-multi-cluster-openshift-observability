@@ -1,5 +1,5 @@
 # Kyverno, admission controller only, to enforce the L1 metrics rule
-# (doc/golden-path/metrics.md). Background, cleanup and reports controllers are
+# (doc/app-teams/1-metrics.md). Background, cleanup and reports controllers are
 # scaled to 0 to save ~300MB per spoke; nothing here needs them.
 # Apply server-side (the CRDs are too big for client-side apply):
 #   oc --context k3d-spoke-N apply -k kyverno --server-side

@@ -12,7 +12,7 @@ NET = lambda m: per_pod(f'rate(container_network_{m}_total{{{C}, interface="eth0
 RESTARTS = lambda w=RATE: per_pod(f"increase(kube_pod_container_status_restarts_total{{{C}}}[{w}])")  # noqa: E731
 THROTTLED = per_pod(f'rate(container_cpu_cfs_throttled_periods_total{{{C}, container!=""}}[{RATE}])')
 PERIODS = per_pod(f'rate(container_cpu_cfs_periods_total{{{C}, container!=""}}[{RATE}])')
-# Golden-path app metrics: the histogram's _count carries path, method and status (doc/golden-path/metrics.md)
+# Golden-path app metrics: the histogram's _count carries path, method and status (doc/app-teams/1-metrics.md)
 REQS = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_count{{{C}, {APP}}}[{w}])")  # noqa: E731
 ERRS = lambda w=RATE: per_pod(f'rate(http_request_duration_seconds_count{{{C}, {APP}, status=~"5.."}}[{w}])')  # noqa: E731
 LAT = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_bucket{{{C}, {APP}}}[{w}])")  # noqa: E731
@@ -146,7 +146,7 @@ dashboard = dashboard(
     # Business question 5: endpoint drill-down (golden-path app metrics)
     extension("Which endpoints are slow or failing?",
               grid("Endpoints", "Per endpoint, over the selected time range, from the golden-path histogram "
-                   "http_request_duration_seconds, labelled path, method, status. Missing your app? See doc/golden-path/metrics.md.",
+                   "http_request_duration_seconds, labelled path, method, status. Missing your app? See doc/app-teams/1-metrics.md.",
                    ("Requests/s", f"sum by (cluster, namespace, workload, method, path) ({REQS(RANGE)})", REQPS, None),
                    ("Errors", ratio(f"sum by (cluster, namespace, workload, method, path) ({ERRS(RANGE)})",
                                     f"sum by (cluster, namespace, workload, method, path) ({REQS(RANGE)})"), PERCENT, ERRORS),

@@ -1,0 +1,48 @@
+# How a dashboard gets from Python to ACM Grafana. Render: d2 --layout elk dashboard-delivery.d2 dashboard-delivery.svg
+vars: {
+  d2-config: {layout-engine: elk}
+  i-github: "https://cdn.simpleicons.org/github"
+  i-argo: "https://cdn.simpleicons.org/argo"
+  i-grafana: "https://cdn.simpleicons.org/grafana"
+  i-openshift: "https://cdn.simpleicons.org/redhatopenshift"
+  i-python: "https://cdn.simpleicons.org/python"
+}
+direction: right
+
+classes: {
+  team: {style: {fill: "#e8f4ea"; stroke: "#2e7d32"}}
+  platform: {style: {fill: "#e8eef8"; stroke: "#1f4e9c"}}
+}
+
+laptop: Dev laptop (no cluster access) {
+  py: "<team>/<name>.py\nstandard.py helpers" {class: team; icon: ${i-python}}
+  build: uv run build.py\nuv run pytest
+  out: "<team>/<name>.json\nkustomization.yaml"
+  py -> build -> out
+}
+
+repo: Central dashboards repo {
+  icon: ${i-github}
+  mr: Merge request {class: team}
+  ci: CI gates\n1. tests pass\n2. build changes no file {class: platform}
+  main: main
+  mr -> ci -> main: merge
+}
+
+hub: Hub (ACM) {
+  icon: ${i-openshift}
+  argo: ArgoCD\nprune + self-heal {class: platform; icon: ${i-argo}}
+  cm: ConfigMap per dashboard\nfolder annotation = team
+  loader: grafana-dashboard-loader
+  grafana: "ACM Grafana\n/d/<team>-<name>" {icon: ${i-grafana}}
+  argo -> cm -> loader -> grafana
+}
+
+laptop.out -> repo.mr: commit
+repo.main -> hub.argo: sync
+
+owners: {
+  near: bottom-center
+  t: Green: app team {class: team}
+  p: Blue: platform team {class: platform}
+}

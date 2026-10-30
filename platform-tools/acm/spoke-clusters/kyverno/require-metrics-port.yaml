@@ -23,4 +23,4 @@ spec:
     - expression: "object.spec.containers.exists(c, has(c.ports) && c.ports.exists(p, has(p.name) && p.name == 'metrics'))"
       message: >-
         golden-path L1: expose a container port named "metrics", or annotate the
-        pod with golden-path/metrics-exempt: "<reason>". See doc/golden-path/metrics.md.
+        pod with golden-path/metrics-exempt: "<reason>". See doc/app-teams/1-metrics.md.

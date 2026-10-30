@@ -2,7 +2,7 @@
 
 - **Status:** Accepted, 2026-10-27
 - **Files:** `platform-tools/acm/spoke-clusters/metrics/manifestwork.yaml`, `kyverno/`, `check-metrics.sh`, `spoke-*/apps.yaml`
-- **Onboarding guide:** [golden-path/metrics.md](../golden-path/metrics.md)
+- **Onboarding guide:** [app-teams/1-metrics.md](../app-teams/1-metrics.md)
 
 ## Context
 - ACM's spoke Prometheus only scrapes platform targets: kubelet/cAdvisor, kube-state-metrics, node-exporter, CoreDNS, control plane.
