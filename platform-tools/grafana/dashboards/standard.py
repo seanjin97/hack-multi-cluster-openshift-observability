@@ -213,7 +213,8 @@ def drill(*labels, **renamed):
 
 
 def _header(title, subtitle):
-    return (text.Panel().title(title).content(subtitle).mode(tm.TextMode.MARKDOWN)
+    """Quadrant heading: one markdown line, no panel title (a titled 2-row text panel clips its own text)."""
+    return (text.Panel().content(f"#### {title} <small>· {subtitle}</small>").mode(tm.TextMode.MARKDOWN)
             .transparent(True).height(2))
 
 

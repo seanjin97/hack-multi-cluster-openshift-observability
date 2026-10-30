@@ -327,11 +327,10 @@
       },
       "id": 7,
       "options": {
-        "content": "How long requests take",
+        "content": "#### Latency <small>\u00b7 How long requests take</small>",
         "mode": "markdown"
       },
       "repeatDirection": "h",
-      "title": "Latency",
       "transparent": true,
       "type": "text"
     },
@@ -344,11 +343,10 @@
       },
       "id": 8,
       "options": {
-        "content": "How much demand",
+        "content": "#### Traffic <small>\u00b7 How much demand</small>",
         "mode": "markdown"
       },
       "repeatDirection": "h",
-      "title": "Traffic",
       "transparent": true,
       "type": "text"
     },
@@ -609,11 +607,10 @@
       },
       "id": 13,
       "options": {
-        "content": "How often requests fail",
+        "content": "#### Errors <small>\u00b7 How often requests fail</small>",
         "mode": "markdown"
       },
       "repeatDirection": "h",
-      "title": "Errors",
       "transparent": true,
       "type": "text"
     },
@@ -626,11 +623,10 @@
       },
       "id": 14,
       "options": {
-        "content": "How full the system is",
+        "content": "#### Saturation <small>\u00b7 How full the system is</small>",
         "mode": "markdown"
       },
       "repeatDirection": "h",
-      "title": "Saturation",
       "transparent": true,
       "type": "text"
     },

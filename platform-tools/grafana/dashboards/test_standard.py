@@ -29,7 +29,7 @@ def render(*sections):
 
 
 def panels(j):
-    return [p for top in j["panels"] for p in [top, *top.get("panels", [])] if p["type"] != "row"]
+    return [p for top in j["panels"] for p in [top, *top.get("panels", [])] if p["type"] not in ("row", "text")]
 
 
 # --- node groups: a node lands in exactly one group, by its name ---
