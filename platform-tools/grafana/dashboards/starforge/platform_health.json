@@ -1,0 +1,3355 @@
+{
+  "annotations": {},
+  "description": "Platform team view of every cluster: vitals, golden signals, provisioning, node groups, workloads and endpoints. Slice any panel with the cluster, node, namespace, workload and pod filters.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Alert Analysis",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/w1V3PRTnk"
+    },
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kubernetes / API server",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/09ec8aa1e996d6ffcd6817bbaff4db1b"
+    },
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kubernetes / Service-Level Overview / API Server",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/L8KwmaR7nz"
+    },
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kubernetes / etcd Cluster",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/N8BxQ2jMz"
+    },
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "USE Method / Node",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/fac67cfbe174d3ef53eb473d73d9212f"
+    },
+    {
+      "asDropdown": false,
+      "icon": "",
+      "includeVars": true,
+      "keepTime": true,
+      "placement": "inControlsMenu",
+      "tags": [],
+      "targetBlank": true,
+      "title": "ACM Right-Sizing Namespace",
+      "tooltip": "ACM built-in dashboard",
+      "type": "link",
+      "url": "/d/bnqQIPySE"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "System Vitals",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Clusters that sent metrics to the hub. Lower than expected: check the spoke's addon. Cluster filter only.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (cluster) (kube_node_status_allocatable{cluster=~\"$cluster\"}))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Clusters reporting",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Alerts firing now. Above 0: open Alerting, or ACM's alert dashboards. Cluster filter only.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 3,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(ALERTS{cluster=~\"$cluster\", alertstate=\"firing\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Firing alerts",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Selected nodes whose Ready condition isn't true. Above 0: check the node.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 4,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(kube_node_status_condition{cluster=~\"$cluster\", node=~\"$node\", condition=\"Ready\", status!=\"true\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes not ready",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Pods in Pending, Failed or Unknown. Above 0: filter to the namespace and check its workloads.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 5,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((kube_pod_status_phase{cluster=~\"$cluster\", phase=~\"Pending|Failed|Unknown\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Pods not running",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of golden-path app requests answered 5xx. Above 1%: open the endpoints row.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 6,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\", status=~\"5..\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))) or vector(0)) / (sum((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "App 5xx rate",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "The busiest selected node's CPU. Above 85%: find the node group in Saturation.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 7,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max((instance:node_cpu_utilisation:rate1m{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Peak node CPU",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 8,
+      "panels": [],
+      "title": "Golden Signals",
+      "type": "row"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 9,
+      "options": {
+        "content": "How long requests take",
+        "mode": "markdown"
+      },
+      "repeatDirection": "h",
+      "title": "Latency",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 10,
+      "options": {
+        "content": "How much demand",
+        "mode": "markdown"
+      },
+      "repeatDirection": "h",
+      "title": "Traffic",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "95th percentile golden-path request duration. Above 300ms: open the endpoints row.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.3
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "id": 11,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (cluster, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "App p95 by cluster",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Kubernetes API latency, 99th percentile. Slow: everything that talks to the API slows down. Source: ACM Kubernetes / API server. Cluster filter only.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.3
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 12,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "apiserver_request_duration_seconds:histogram_quantile_99{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "API server p99",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Golden-path app requests per second.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 8
+      },
+      "id": 13,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (cluster) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "App requests/s by cluster",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Requests per second per status code. Watch 4xx and 5xx grow.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 8
+      },
+      "id": 14,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (cluster, status) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+          "legendFormat": "{{cluster}} {{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "App requests/s by status",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Weighted IO time per second: how long disk IO waits. Rising: disk-bound nodes. Source: ACM USE Method / Node.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 15,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((instance_device:node_disk_io_time_weighted_seconds:rate1m{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+          "legendFormat": "{{cluster}} {{node_group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Disk IO wait by node group",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Bytes received and sent by node group. Source: ACM USE Method / Node.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 16,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((instance:node_network_receive_bytes_excluding_lo:rate1m{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+          "legendFormat": "{{cluster}} {{node_group}} in",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((instance:node_network_transmit_bytes_excluding_lo:rate1m{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+          "legendFormat": "{{cluster}} {{node_group}} out",
+          "refId": "B"
+        }
+      ],
+      "title": "Node network by group",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 17,
+      "options": {
+        "content": "How often requests fail",
+        "mode": "markdown"
+      },
+      "repeatDirection": "h",
+      "title": "Errors",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 18,
+      "options": {
+        "content": "How full the system is",
+        "mode": "markdown"
+      },
+      "repeatDirection": "h",
+      "title": "Saturation",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of requests answered 5xx. Above 1%: open the endpoints row.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "id": 19,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (cluster) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\", status=~\"5..\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "App 5xx ratio",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of TCP segments retransmitted. Above 1%: packet loss or a congested node; find the pod in 'Which pods are loading the node network?'. Source: ACM Kubernetes / Networking / Node.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 26
+      },
+      "id": 20,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((rate(node_netstat_Tcp_RetransSegs{cluster=~\"$cluster\"}[$__rate_interval])) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))) / (sum by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((rate(node_netstat_Tcp_OutSegs{cluster=~\"$cluster\"}[$__rate_interval])) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\")))",
+          "legendFormat": "{{cluster}} {{node_group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "TCP retransmits by node group",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Average CPU utilisation per node group.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "id": 21,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((instance:node_cpu_utilisation:rate1m{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+          "legendFormat": "{{cluster}} {{node_group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU by node group",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Average memory utilisation per node group.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "id": 22,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg by (cluster, node_group) (label_replace(label_replace(label_replace(label_replace((instance:node_memory_utilisation:ratio{cluster=~\"$cluster\"}) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+          "legendFormat": "{{cluster}} {{node_group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory by node group",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Container restarts per step. Any bar: a crash loop or OOM kill.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "id": 23,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (cluster, namespace, workload) ((increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))) > 0",
+          "legendFormat": "{{cluster}} {{namespace}}/{{workload}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Restarts by workload",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of CPU periods where containers hit their CPU limit. High: limits too low; latency suffers.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 24,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (cluster) ((rate(container_cpu_cfs_throttled_periods_total{cluster=~\"$cluster\", container!=\"\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster) ((rate(container_cpu_cfs_periods_total{cluster=~\"$cluster\", container!=\"\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU throttling",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 25,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Share of the selected nodes' CPU reserved by the selected pods. Above 85%: new pods may not schedule.",
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.7
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.85
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 43
+          },
+          "id": 30,
+          "interval": "1m",
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum((kube_node_status_allocatable{cluster=~\"$cluster\", resource=\"cpu\"}) and on (cluster, node) max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))))",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU requested / allocatable",
+          "transparent": false,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Average use over 7 days against the request. Blue: reserved but idle (over-provisioned). Red: using more than reserved (under-provisioned).",
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.3
+                  },
+                  {
+                    "color": "red",
+                    "value": 1.0
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 43
+          },
+          "id": 31,
+          "interval": "1m",
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "timeFrom": "7d",
+          "title": "CPU used / requested (7d)",
+          "transparent": false,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Share of the selected nodes' memory reserved by the selected pods.",
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.7
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.85
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 43
+          },
+          "id": 32,
+          "interval": "1m",
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum((kube_node_status_allocatable{cluster=~\"$cluster\", resource=\"memory\"}) and on (cluster, node) max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))))",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory requested / allocatable",
+          "transparent": false,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Average use over 7 days against the request. Blue: reserved but idle. Red: using more than reserved, at risk of OOM or eviction.",
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.3
+                  },
+                  {
+                    "color": "red",
+                    "value": 1.0
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 43
+          },
+          "id": 33,
+          "interval": "1m",
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum((avg_over_time(container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "timeFrom": "7d",
+          "title": "Memory used / requested (7d)",
+          "transparent": false,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Average use over 7 days against the requests, per namespace. Blue (<30%): lower the requests. Red (>100%): raise them. Empty ratio: no requests set, so the scheduler is guessing. Click a namespace to filter to it. For recommended values, open ACM Right-Sizing Namespace from the header. Source: ACM ACM Right-Sizing Namespace.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "inspect": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU used"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "suffix: cores"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "suffix: cores"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU used / requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "blue",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory used"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory used / requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "blue",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "namespace"
+                },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "Filter to this",
+                        "url": "/d/starforge-platform-health?var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&${__url_time_range}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 47
+          },
+          "id": 34,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "reducer": [],
+              "show": false
+            },
+            "frameIndex": 0,
+            "showHeader": true,
+            "showTypeIcons": false,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "CPU requested"
+              }
+            ]
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) ((avg_over_time(container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "E"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace) ((avg_over_time(container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "F"
+            }
+          ],
+          "timeFrom": "7d",
+          "title": "Provisioning by namespace (7d)",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value #A": "CPU used",
+                  "Value #B": "CPU requested",
+                  "Value #C": "CPU used / requested",
+                  "Value #D": "Memory used",
+                  "Value #E": "Memory requested",
+                  "Value #F": "Memory used / requested"
+                }
+              }
+            }
+          ],
+          "transparent": false,
+          "type": "table"
+        }
+      ],
+      "title": "Are we using what we've reserved?",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 26,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Per workload, over the selected time range: pods, average use vs request, memory vs limit, restarts. You build it, you run it: fix blue and red cells by changing your requests. Click a workload to filter to it.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "inspect": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Pods"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU used / requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "blue",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory used / requested"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "blue",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1.0
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory used / limit"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.7
+                        },
+                        {
+                          "color": "red",
+                          "value": 0.85
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Restarts"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "workload"
+                },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "Filter to this",
+                        "url": "/d/starforge-platform-health?var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-workload=${__data.fields.workload}&${__url_time_range}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 44
+          },
+          "id": 35,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "reducer": [],
+              "show": false
+            },
+            "frameIndex": 0,
+            "showHeader": true,
+            "showTypeIcons": false,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Pods"
+              }
+            ]
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count by (cluster, namespace, workload) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace, workload) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, workload) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace, workload) ((avg_over_time(container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, workload) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace, workload) ((avg_over_time(container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, workload) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace, workload) ((increase(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "E"
+            }
+          ],
+          "title": "Workloads",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value #A": "Pods",
+                  "Value #B": "CPU used / requested",
+                  "Value #C": "Memory used / requested",
+                  "Value #D": "Memory used / limit",
+                  "Value #E": "Restarts"
+                }
+              }
+            }
+          ],
+          "transparent": false,
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "CPU used per pod.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "fillOpacity": 10
+              },
+              "min": 0,
+              "unit": "suffix: cores"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 54
+          },
+          "id": 36,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, pod) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "legendFormat": "{{cluster}} {{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU by pod",
+          "transparent": false,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Working-set memory per pod. Reaching the limit means OOM kills.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "fillOpacity": 10
+              },
+              "min": 0,
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 54
+          },
+          "id": 37,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, pod) ((container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "legendFormat": "{{cluster}} {{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory by pod",
+          "transparent": false,
+          "type": "timeseries"
+        }
+      ],
+      "title": "How are my workloads doing? (filter to your namespace)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 27,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "One row per selected node: its group, and peak saturation over the selected time range. Click a node to filter to it. Source: ACM USE Method / Node.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "inspect": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.7
+                        },
+                        {
+                          "color": "red",
+                          "value": 0.85
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.7
+                        },
+                        {
+                          "color": "red",
+                          "value": 0.85
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Load per CPU"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.7
+                        },
+                        {
+                          "color": "red",
+                          "value": 0.85
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Pods"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "instance"
+                },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "Filter to this",
+                        "url": "/d/starforge-platform-health?var-cluster=${__data.fields.cluster}&var-node=${__data.fields.instance}&${__url_time_range}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 45
+          },
+          "id": 38,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "reducer": [],
+              "show": false
+            },
+            "frameIndex": 0,
+            "showHeader": true,
+            "showTypeIcons": false,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "CPU"
+              }
+            ]
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (cluster, node_group, instance) (label_replace(label_replace(label_replace(label_replace((max_over_time(instance:node_cpu_utilisation:rate1m{cluster=~\"$cluster\"}[$__range])) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (cluster, node_group, instance) (label_replace(label_replace(label_replace(label_replace((max_over_time(instance:node_memory_utilisation:ratio{cluster=~\"$cluster\"}[$__range])) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (cluster, node_group, instance) (label_replace(label_replace(label_replace(label_replace((max_over_time(instance:node_load1_per_cpu:ratio{cluster=~\"$cluster\"}[$__range])) and on (cluster, instance) label_replace(max by (cluster, node) (max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))), \"instance\", \"$1\", \"node\", \"(.*)\"), \"node_group\", \"other\", \"instance\", \".*\"), \"node_group\", \"worker\", \"instance\", \"w-.*|.*-agent-.*\"), \"node_group\", \"infra\", \"instance\", \"i-.*\"), \"node_group\", \"control-plane\", \"instance\", \"m-.*|cp-.*|.*-server-.*\"))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count by (cluster, instance) (label_replace(max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")), \"instance\", \"$1\", \"node\", \"(.*)\"))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "D"
+            }
+          ],
+          "title": "Nodes",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value #A": "CPU",
+                  "Value #B": "Memory",
+                  "Value #C": "Load per CPU",
+                  "Value #D": "Pods"
+                }
+              }
+            }
+          ],
+          "transparent": false,
+          "type": "table"
+        }
+      ],
+      "title": "Which nodes are under pressure?",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "id": 28,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "The busiest pods by average bytes over the selected time range, and their dropped packets. A pod at the top on a node with TCP retransmits is the likely noisy neighbour. Click a pod to filter to it.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "inspect": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Received"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Sent"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Dropped"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "pps"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "pod"
+                },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "Filter to this",
+                        "url": "/d/starforge-platform-health?var-cluster=${__data.fields.cluster}&var-namespace=${__data.fields.namespace}&var-pod=${__data.fields.pod}&${__url_time_range}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 46
+          },
+          "id": 39,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "reducer": [],
+              "show": false
+            },
+            "frameIndex": 0,
+            "showHeader": true,
+            "showTypeIcons": false,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Received"
+              }
+            ]
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, node, namespace, pod) ((rate(container_network_receive_bytes_total{cluster=~\"$cluster\", interface=\"eth0\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, node, namespace, pod) ((rate(container_network_transmit_bytes_total{cluster=~\"$cluster\", interface=\"eth0\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, node, namespace, pod) ((rate(container_network_receive_packets_dropped_total{cluster=~\"$cluster\", interface=\"eth0\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))) + sum by (cluster, node, namespace, pod) ((rate(container_network_transmit_packets_dropped_total{cluster=~\"$cluster\", interface=\"eth0\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            }
+          ],
+          "title": "Pods by network",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value #A": "Received",
+                  "Value #B": "Sent",
+                  "Value #C": "Dropped"
+                }
+              }
+            }
+          ],
+          "transparent": false,
+          "type": "table"
+        }
+      ],
+      "title": "Which pods are loading the node network?",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 29,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Per endpoint, over the selected time range, from the golden-path histogram http_request_duration_seconds, labelled path, method, status. Missing your app? See doc/golden-path/metrics.md.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "inspect": false
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Requests/s"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "reqps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Errors"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.01
+                        },
+                        {
+                          "color": "red",
+                          "value": 0.05
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "p50"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "p95"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "p99"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.3
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 47
+          },
+          "id": 40,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "reducer": [],
+              "show": false
+            },
+            "frameIndex": 0,
+            "showHeader": true,
+            "showTypeIcons": false,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "p95"
+              }
+            ]
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace, workload, method, path) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(sum by (cluster, namespace, workload, method, path) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\", status=~\"5..\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, workload, method, path) ((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.5, sum by (cluster, namespace, workload, method, path, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.95, sum by (cluster, namespace, workload, method, path, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.99, sum by (cluster, namespace, workload, method, path, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__range])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "E"
+            }
+          ],
+          "title": "Endpoints",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value #A": "Requests/s",
+                  "Value #B": "Errors",
+                  "Value #C": "p50",
+                  "Value #D": "p95",
+                  "Value #E": "p99"
+                }
+              }
+            }
+          ],
+          "transparent": false,
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Latency over time for the 10 slowest endpoints.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "fillOpacity": 10,
+                "thresholdsStyle": {
+                  "mode": "dashed"
+                }
+              },
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.3
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 57
+          },
+          "id": 41,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "topk(10, histogram_quantile(0.95, sum by (cluster, workload, method, path, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))))",
+              "legendFormat": "{{cluster}} {{workload}} {{method}} {{path}}",
+              "refId": "A"
+            }
+          ],
+          "title": "p95 by endpoint",
+          "transparent": false,
+          "type": "timeseries"
+        }
+      ],
+      "title": "Which endpoints are slow or failing?",
+      "type": "row"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "tags": [
+    "golden-path",
+    "platform",
+    "fleet",
+    "starforge"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "Observatorium",
+          "value": "Observatorium"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "query": "prometheus",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "query": {
+          "query": "label_values(kube_node_status_allocatable, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "query": {
+          "query": "label_values(kube_node_status_allocatable{cluster=~\"$cluster\"}, node)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "query": {
+          "query": "label_values(kube_pod_info{cluster=~\"$cluster\", node=~\"$node\"}, namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Workload",
+        "multi": true,
+        "name": "workload",
+        "query": {
+          "query": "query_result(max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\".*\", created_by_name=~\"(?:.*)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\".*\", created_by_name=~\"(?:.*)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "/workload=\"([^\"]+)\"/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "allowCustomValue": true,
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "includeAll": true,
+        "label": "Pod",
+        "multi": true,
+        "name": "pod",
+        "query": {
+          "query": "label_values(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\".*\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\"}, pod)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Platform Health",
+  "uid": "starforge-platform-health"
+}
