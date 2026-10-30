@@ -48,6 +48,9 @@ How app teams get their metrics into the fleet's Grafana. Design: [ADR 0003](../
 - Fleet-wide check: `platform-tools/acm/spoke-clusters/check-metrics.sh`.
 - Metrics arrive within ~1 minute (30s scrape + 30s push).
 
+## Next: put a business metric on your dashboard
+Success/failure counts, durations, backlogs: [custom-metrics.md](custom-metrics.md).
+
 ## Rules of thumb
 - One `metrics` port per pod is enough; with sidecars, put it on the exporter.
 - Everything scraped is sent to the hub, so mind cardinality: ~1k series per spoke today.

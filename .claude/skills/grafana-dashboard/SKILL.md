@@ -34,6 +34,8 @@ Look for the directory holding `standard.py`, `build.py` and `acm-builtin.md`. I
    - golden-path app metrics (`http_request_duration_seconds`).
 
    If a platform metric is missing, add it to `metrics-allowlist.yaml` with a comment naming the panel, and tell the user platform must approve it. If an app metric is missing, the app has to emit it; never fake it in PromQL.
+
+   For a team's own business metric (e.g. `submissions_total{outcome=...}`), follow `doc/golden-path/custom-metrics.md` in the repo: counters with an `outcome` label, bounded labels, selected with `{APP}` and wrapped in `per_pod(...)`.
 4. **Reuse before you build** (see Built-in dashboards).
 5. **Write the `.py` with `standard.py` helpers only.** Never call SDK builders directly. If the standard lacks something, stop and tell the user. A change to `standard.py` is a separate, platform-reviewed MR with its own tests, not part of a dashboard.
 6. **Build locally:** `uv run build.py`, from the dashboards directory. If it fails, the message names the panel and the rule. Fix the `.py`; never work around the rule.
