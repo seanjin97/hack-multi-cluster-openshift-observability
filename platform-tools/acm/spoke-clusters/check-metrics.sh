@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks every running pod on every spoke has metrics on the hub:
-#   - pods in golden-path.level=L1 namespaces (not exempt): own metrics, up == 1
+#   - pods in starlab-platform/maturity=L1 namespaces (not exempt): own metrics, up == 1
 #   - every other pod: at least pod-level metrics (kube_pod_info)
 # Exits 1 and lists the missing pods otherwise.
 # Usage: ./check-metrics.sh
@@ -23,7 +23,7 @@ for dir in spoke-*/; do
   spoke=${dir%/}
   grep -q "^$spoke " <<<"$known" || { echo "NO DATA from $spoke at all: check its addon (oc --context k3d-$spoke get pods -n open-cluster-management-addon-observability)"; missing=1; continue; }
   grep -q "^$spoke " <<<"$scraped" || echo "WARN: no app-metrics from $spoke: PodMonitor missing? (oc get manifestwork app-metrics -n $spoke)"
-  l1=" $(oc --context "k3d-$spoke" get ns -l golden-path.level=L1 -o jsonpath='{.items[*].metadata.name}') "
+  l1=" $(oc --context "k3d-$spoke" get ns -l starlab-platform/maturity=L1 -o jsonpath='{.items[*].metadata.name}') "
   # "namespace pod exempt" lines, exempt = yes/no
   while read -r ns pod exempt; do
     if [[ $l1 == *" $ns "* && $exempt == no ]]; then want=$scraped; kind="own metrics"; else want=$known; kind="pod metrics"; fi
@@ -31,7 +31,7 @@ for dir in spoke-*/; do
   done < <(oc --context "k3d-$spoke" get pods -A --field-selector=status.phase=Running -o json | python3 -c 'import sys, json
 for p in json.load(sys.stdin)["items"]:
     m = p["metadata"]
-    print(m["namespace"], m["name"], "yes" if "golden-path/metrics-exempt" in m.get("annotations", {}) else "no")')
+    print(m["namespace"], m["name"], "yes" if "starlab-platform/metrics-exempt" in m.get("annotations", {}) else "no")')
 done
 
 [ $missing = 0 ] && echo "OK: every running spoke pod has metrics on the hub."

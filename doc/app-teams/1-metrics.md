@@ -1,22 +1,23 @@
 # 1. Metrics: get your app's metrics to the hub
 
-← [App teams](README.md) · next: [2. Dashboard](2-dashboards.md) · design: [ADR 0004](../decisions/0004-per-pod-app-metrics.md)
+← [0. Levels](0-levels.md) · next: [2. Dashboard](2-dashboards.md) · design: [ADR 0004](../decisions/0004-per-pod-app-metrics.md)
 
 ![Metric path](../architecture/metric-path.svg)
 
 - **Free, no action needed:** CPU, memory, network, restarts and replicas for every pod (cAdvisor, kube-state-metrics).
 - **Your metrics:** serve Prometheus `/metrics` on a container port named `metrics`. The platform scrapes it and forwards everything to the hub within ~1 min. No ServiceMonitor or PodMonitor needed.
 
-## Levels
-| | L0: spike, POC | L1: scale, maintain |
+## What your level needs
+Levels and every other L1 rule: [0. Levels](0-levels.md).
+
+| | L0 Explore | L1 Operate |
 |---|---|---|
-| Namespace label | none | `golden-path.level: L1` |
 | `metrics` port | optional | **required**, enforced at admission by Kyverno |
 | What to emit | anything | RED (rate, errors, duration) + your business metrics |
 | Off-the-shelf software (nginx, redis, …) | — | exporter sidecar on the `metrics` port |
-| Pods with nothing to expose | — | `golden-path/metrics-exempt: "<reason>"` annotation |
+| Pods with nothing to expose | — | `starlab-platform/metrics-exempt: "<reason>"` annotation |
 
-## Onboard to L1
+## Expose your metrics
 1. **Name the port:**
    ```yaml
    ports: [{name: metrics, containerPort: 9898}]
@@ -32,11 +33,11 @@
 3. **Emit RED:** a request duration histogram labelled `path`, `method`, `status`. Its `_count` gives traffic and errors, and its `_bucket` gives latency. Example: podinfo's `http_request_duration_seconds`.
 4. **Exempt only what has nothing to expose** (load generators, one-shot jobs):
    ```yaml
-   annotations: {golden-path/metrics-exempt: "busybox load generator, no metrics to expose"}
+   annotations: {starlab-platform/metrics-exempt: "busybox load generator, no metrics to expose"}
    ```
-5. **Label the namespace** `golden-path.level: L1`. From then on, a pod without a `metrics` port is rejected:
+5. **At L1** ([how to move](0-levels.md#move-to-l1)), a pod without a `metrics` port is rejected:
    ```
-   golden-path L1: expose a container port named "metrics", or annotate the pod with golden-path/metrics-exempt: "<reason>".
+   starlab-platform L1: expose a container port named "metrics", or annotate the pod with starlab-platform/metrics-exempt: "<reason>".
    ```
 
 ## Business metrics (success, failure, backlog)

@@ -3,7 +3,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: spoke-1-demo
-  labels: {golden-path.level: L1}   # every pod must expose a "metrics" port
+  labels: {starlab-platform/maturity: L1, starlab-platform/team: starforge}   # L1 rules: doc/app-teams/0-levels.md
+  annotations: {starlab-platform/contact: "#starforge-oncall"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -19,6 +20,8 @@ spec:
           image: ghcr.io/stefanprodan/podinfo:6.7.1
           command: [./podinfo, --port=9898]
           ports: [{name: metrics, containerPort: 9898}]   # podinfo serves /metrics natively
+          readinessProbe: {httpGet: {path: /readyz, port: metrics}}
+          livenessProbe: {httpGet: {path: /healthz, port: metrics}}
           resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 50m, memory: 64Mi}}
 ---
 apiVersion: v1
@@ -44,6 +47,8 @@ spec:
           image: ghcr.io/stefanprodan/podinfo:6.7.1
           command: [./podinfo, --port=9898, --backend-url=http://backend:9898/echo]
           ports: [{name: metrics, containerPort: 9898}]
+          readinessProbe: {httpGet: {path: /readyz, port: metrics}}
+          livenessProbe: {httpGet: {path: /healthz, port: metrics}}
           resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 50m, memory: 64Mi}}
 ---
 apiVersion: v1
@@ -62,7 +67,9 @@ spec:
   template:
     metadata:
       labels: {app: loadgen}
-      annotations: {golden-path/metrics-exempt: "busybox load generator, no metrics to expose"}
+      annotations:
+        starlab-platform/metrics-exempt: "busybox load generator, no metrics to expose"
+        starlab-platform/probes-exempt: "busybox load generator, serves nothing"
     spec:
       containers:
         # A 10-minute traffic wave, so every golden signal has something to show:

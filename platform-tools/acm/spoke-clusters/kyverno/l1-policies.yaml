@@ -1,0 +1,102 @@
+# L1 (Operate) rules, enforced at admission in namespaces labelled
+# starlab-platform/maturity: L1. One policy per rule; the rules, the reasons
+# and the exemptions are in doc/app-teams/0-levels.md.
+# Pods are checked, not Deployments (autogen off): a Deployment still rolls out,
+# its pods are rejected (oc get events -n <ns> --field-selector reason=FailedCreate).
+# Applied after Kyverno's CRDs exist (spokes.sh). New rules ship as [Warn] first.
+
+# Who owns this namespace: team label + contact annotation (Slack, on-call, email)
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-owner
+spec:
+  validationActions: [Deny]
+  evaluation:
+    background: {enabled: false}   # reports controller is off
+  matchConstraints:
+    resourceRules:
+      - {apiGroups: [""], apiVersions: [v1], operations: [CREATE, UPDATE], resources: [namespaces]}
+    objectSelector: {matchLabels: {starlab-platform/maturity: L1}}
+  validations:
+    - expression: >-
+        has(object.metadata.labels) && object.metadata.labels[?'starlab-platform/team'].orValue('') != '' &&
+        has(object.metadata.annotations) && object.metadata.annotations[?'starlab-platform/contact'].orValue('') != ''
+      message: >-
+        starlab-platform L1: label the namespace starlab-platform/team: <team> and annotate it
+        starlab-platform/contact: "<channel or on-call>". See doc/app-teams/0-levels.md.
+---
+# Every pod exposes a container port named "metrics", which ACM's spoke
+# Prometheus scrapes (metrics/manifestwork.yaml). Opt-out for pods with nothing to expose.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-metrics-port
+spec:
+  validationActions: [Deny]
+  evaluation:
+    background: {enabled: false}
+  autogen:
+    podControllers: {controllers: []}
+  matchConstraints:
+    resourceRules:
+      - {apiGroups: [""], apiVersions: [v1], operations: [CREATE, UPDATE], resources: [pods]}
+    namespaceSelector: {matchLabels: {starlab-platform/maturity: L1}}
+  matchConditions:
+    - name: not-exempt
+      expression: "!has(object.metadata.annotations) || !('starlab-platform/metrics-exempt' in object.metadata.annotations)"
+  validations:
+    - expression: "object.spec.containers.exists(c, has(c.ports) && c.ports.exists(p, has(p.name) && p.name == 'metrics'))"
+      message: >-
+        starlab-platform L1: expose a container port named "metrics", or annotate the
+        pod with starlab-platform/metrics-exempt: "<reason>". See doc/app-teams/1-metrics.md.
+---
+# Every container has a readiness and a liveness probe. Opt-out for pods with
+# nothing to serve (load generators, one-shot jobs). Init containers aren't checked.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-probes
+spec:
+  validationActions: [Deny]
+  evaluation:
+    background: {enabled: false}
+  autogen:
+    podControllers: {controllers: []}
+  matchConstraints:
+    resourceRules:
+      - {apiGroups: [""], apiVersions: [v1], operations: [CREATE, UPDATE], resources: [pods]}
+    namespaceSelector: {matchLabels: {starlab-platform/maturity: L1}}
+  matchConditions:
+    - name: not-exempt
+      expression: "!has(object.metadata.annotations) || !('starlab-platform/probes-exempt' in object.metadata.annotations)"
+  validations:
+    - expression: "object.spec.containers.all(c, has(c.readinessProbe) && has(c.livenessProbe))"
+      message: >-
+        starlab-platform L1: every container needs a readinessProbe and a livenessProbe, or annotate
+        the pod with starlab-platform/probes-exempt: "<reason>". See doc/app-teams/0-levels.md.
+---
+# Every container requests CPU and memory and caps memory. A CPU limit is optional.
+# No exemption: every pod can declare these.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-resources
+spec:
+  validationActions: [Deny]
+  evaluation:
+    background: {enabled: false}
+  autogen:
+    podControllers: {controllers: []}
+  matchConstraints:
+    resourceRules:
+      - {apiGroups: [""], apiVersions: [v1], operations: [CREATE, UPDATE], resources: [pods]}
+    namespaceSelector: {matchLabels: {starlab-platform/maturity: L1}}
+  validations:
+    - expression: >-
+        object.spec.containers.all(c, has(c.resources) &&
+          has(c.resources.requests) && 'cpu' in c.resources.requests && 'memory' in c.resources.requests &&
+          has(c.resources.limits) && 'memory' in c.resources.limits)
+      message: >-
+        starlab-platform L1: every container needs resources.requests.cpu, resources.requests.memory
+        and resources.limits.memory. See doc/app-teams/0-levels.md.

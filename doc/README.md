@@ -4,7 +4,7 @@
 
 | You are | Start at |
 |---|---|
-| **App team:** your metrics and dashboard | [app-teams/](app-teams/README.md): 1. metrics → 2. dashboard → 3. ship |
+| **App team:** your metrics and dashboard | [app-teams/](app-teams/README.md): 0. levels → 1. metrics → 2. dashboard → 3. ship |
 | **Platform team:** run and extend the stack | [platform/](platform/setup.md): [setup](platform/setup.md) · [operate](platform/operate.md) · [extend](platform/extend.md) |
 | **Reviewer:** why it's built this way | [decisions/](decisions/) · [research/](research/) · [architecture/](architecture/README.md) |
 
@@ -15,6 +15,7 @@
   - [0003 ACM observability addon](decisions/0003-acm-observability-addon.md)
   - [0004 per-pod app metrics](decisions/0004-per-pod-app-metrics.md)
   - [0005 dashboards as code](decisions/0005-dashboards-as-code.md)
+  - [0006 maturity levels](decisions/0006-maturity-levels.md)
 - **Research:** [Network Observability Operator](research/network-observability.md).
 - **Built-in ACM dashboards:** [acm-builtin.md](../platform-tools/grafana/dashboards/acm-builtin.md), generated.
 - **Legacy, not the golden path:**

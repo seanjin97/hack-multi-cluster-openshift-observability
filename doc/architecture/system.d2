@@ -103,10 +103,10 @@ mac: Mac (localhost) {
         podmon -> prom: config
         prom -> collector: federate
       }
-      kyverno: Kyverno admission\n(L1: pods need a "metrics" port)
+      kyverno: Kyverno admission\n(L1: owner, metrics port,\nprobes, resources)
       apps: spoke-1-demo (L1)\npodinfo frontend/backend + loadgen {class: demo}
       kubelet: kubelet + cAdvisor\n(per node)
-      kyverno -> apps: reject pods without\na metrics port {style.stroke-dash: 3}
+      kyverno -> apps: reject pods\nbreaking L1 rules {style.stroke-dash: 3}
       apps -> addon.prom: scrape podinfo /metrics
       apps -> kubelet: containers run on nodes {style.stroke-dash: 3}
       kubelet -> addon.prom: scrape CPU / memory / network\nper container
@@ -127,10 +127,10 @@ mac: Mac (localhost) {
         podmon -> prom: config
         prom -> collector: federate
       }
-      kyverno: Kyverno admission\n(L1: pods need a "metrics" port)
+      kyverno: Kyverno admission\n(L1: owner, metrics port,\nprobes, resources)
       apps: spoke-2-demo (L1)\nnginx + redis + loadgen {class: demo; icon: ${i-redis}}
       kubelet: kubelet + cAdvisor\n(per node)
-      kyverno -> apps: reject pods without\na metrics port {style.stroke-dash: 3}
+      kyverno -> apps: reject pods\nbreaking L1 rules {style.stroke-dash: 3}
       apps -> addon.prom: scrape nginx + redis exporter sidecars
       apps -> kubelet: containers run on nodes {style.stroke-dash: 3}
       kubelet -> addon.prom: scrape CPU / memory / network\nper container

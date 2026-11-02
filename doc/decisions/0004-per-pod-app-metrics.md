@@ -21,7 +21,7 @@
   - a ClusterRole/Binding so `prometheus-k8s` can discover pods everywhere;
   - `observability-metrics-custom-allowlist` matching the PodMonitor's job (forward everything it scrapes);
   - an `aggregate-to-work` ClusterRole so the work agent may manage PodMonitors.
-- Kyverno, admission controller only, with ValidatingPolicy `require-metrics-port`: in namespaces labelled `golden-path.level=L1`, every pod needs a `metrics` port, unless annotated `golden-path/metrics-exempt: "<reason>"`.
+- Kyverno, admission controller only, with ValidatingPolicy `require-metrics-port`: in namespaces labelled `golden-path.level=L1`, every pod needs a `metrics` port, unless annotated `golden-path/metrics-exempt: "<reason>"`. Keys renamed to `starlab-platform/maturity` and `starlab-platform/metrics-exempt`, and the policy moved into `l1-policies.yaml`, by [0006](0006-maturity-levels.md).
 - Software without native metrics gets an exporter sidecar (nginx: `nginx-prometheus-exporter`; redis: `redis_exporter`).
 
 ```mermaid
