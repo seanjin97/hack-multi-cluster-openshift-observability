@@ -1,0 +1,106 @@
+# One-slide version of system.d2: crc ACM hub + 2 k3d spokes on one Mac.
+# Render: d2 --layout elk system-compact.d2 system-compact.svg
+# Layout is hand-placed with grids (cells fill row by row), so edges stay short and straight.
+vars: {
+  d2-config: {
+    layout-engine: elk
+    pad: 24
+  }
+  i-prom: "https://raw.githubusercontent.com/cncf/artwork/main/projects/prometheus/icon/color/prometheus-icon-color.svg"
+  i-thanos: "https://raw.githubusercontent.com/cncf/artwork/main/projects/thanos/icon/color/thanos-icon-color.svg"
+  i-k3s: "https://raw.githubusercontent.com/cncf/artwork/main/projects/k3s/icon/color/k3s-icon-color.svg"
+  i-grafana: "https://cdn.simpleicons.org/grafana"
+  i-openshift: "https://cdn.simpleicons.org/redhatopenshift"
+  i-redhat: "https://cdn.simpleicons.org/redhat"
+  i-cloudflare: "https://cdn.simpleicons.org/cloudflare"
+  i-minio: "https://cdn.simpleicons.org/minio"
+}
+
+grid-rows: 2
+grid-columns: 2
+horizontal-gap: 90
+vertical-gap: 50
+
+classes: {
+  invisible: {label: ""; style: {fill: transparent; stroke: transparent}}
+  spoke: {style: {fill: "#fff8e6"; stroke: "#c98a00"; border-radius: 10; font-size: 20; bold: true}}
+  hub: {style: {fill: "#fdeeee"; stroke: "#c62828"; border-radius: 10; font-size: 20; bold: true}}
+  node: {width: 240; height: 96; style: {fill: white; border-radius: 6; font-size: 16}}
+  demo: {width: 240; height: 96; style: {fill: white; border-radius: 6; font-size: 16; stroke-dash: 4}}
+  person: {shape: person; width: 64; height: 64; style: {font-size: 16}}
+  key: {style: {font-size: 15; font-color: "#555"; bold: false}}
+}
+
+# ── Row 1, left: spokes ───────────────────────────────────────────
+spokes: "2 × k3d spokes  (k3s in Colima)" {
+  class: spoke
+  icon: ${i-k3s}
+  grid-rows: 3
+  grid-columns: 2
+  horizontal-gap: 60
+  vertical-gap: 70
+
+  sources: "kubelet · cAdvisor\nkube-state-metrics\nnode-exporter" {class: node}
+  prom: Prometheus {class: node; icon: ${i-prom}; icon.near: center-left; label.near: center-center}
+  apps: "Demo apps\npodinfo · nginx · redis" {class: demo}
+  collector: "metrics-collector\nallowlisted series" {class: node}
+  kyverno: "Kyverno: pods need\na 'metrics' port" {class: demo}
+  klusterlet: "klusterlet\nACM agent" {class: node; icon: ${i-redhat}; icon.near: center-left; label.near: center-center}
+
+  sources -> prom: scrape
+  apps -> prom: scrape
+  prom -> collector: federate
+  kyverno -> apps {style.stroke-dash: 4}
+}
+
+# ── Row 1, right: hub ─────────────────────────────────────────────
+hub: "crc: OpenShift Local  (ACM hub)" {
+  class: hub
+  icon: ${i-openshift}
+  grid-rows: 3
+  grid-columns: 3
+  horizontal-gap: 60
+  vertical-gap: 70
+
+  local: "local-cluster\nhub's own metrics" {class: node; icon: ${i-prom}; icon.near: center-left; label.near: center-center}
+  receive: "thanos-receive\nlast 24h" {class: node; icon: ${i-thanos}; icon.near: center-left; label.near: center-center}
+  silo: "Silo (S3)\nolder blocks" {class: demo; icon: ${i-minio}; icon.near: center-left; label.near: center-center}
+  api: "observatorium-api\ningest endpoint" {class: node; icon: ${i-thanos}; icon.near: center-left; label.near: center-center}
+  rbac: "rbac-query-proxy\nper-user filter" {class: node}
+  query: "thanos-query\n+ store · rule" {class: node; icon: ${i-thanos}; icon.near: center-left; label.near: center-center}
+  acm: "ACM\nregistration\n+ addons" {class: node; icon: ${i-redhat}; icon.near: center-left; label.near: center-center}
+  grafana: "Grafana\n58 dashboards" {class: node; icon: ${i-grafana}; icon.near: center-left; label.near: center-center}
+  public: "public read-only\nnginx + tunnel" {class: demo; icon: ${i-cloudflare}; icon.near: center-left; label.near: center-center}
+
+  local -> api
+  api -> receive: write
+  receive -> silo: upload
+  receive -> query
+  silo -> query
+  query -> rbac
+  rbac -> grafana
+  grafana -> public
+}
+
+# ── Row 2: legend | viewers ───────────────────────────────────────
+legend: {
+  class: invisible
+  grid-columns: 1
+  grid-gap: 14
+  a: "Solid: same as production ACM" {class: node; height: 50; width: 300}
+  b: "Dashed: demo-only" {class: demo; height: 50; width: 300}
+  c: "Everything runs on one Mac" {class: [invisible; key]; label: "Everything runs on one Mac (two VMs)"}
+}
+
+people: {
+  class: invisible
+  grid-columns: 2
+  horizontal-gap: 200
+  user: "Team\n(OpenShift login)" {class: person}
+  viewer: "Public viewer\n(*.trycloudflare.com)" {class: person}
+}
+
+spokes.collector -> hub.api: "push (mTLS)"
+spokes.klusterlet -> hub.acm: register
+hub.grafana -> people.user
+hub.public -> people.viewer
