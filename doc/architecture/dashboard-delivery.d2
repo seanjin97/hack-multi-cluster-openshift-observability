@@ -15,7 +15,7 @@ classes: {
 }
 
 laptop: Dev laptop (no cluster access) {
-  py: "<team>/<name>.py\nstandard.py helpers" {class: team; icon: ${i-python}}
+  py: "<team>/<name>.py\ncomponents/" {class: team; icon: ${i-python}}
   build: uv run build.py\nuv run pytest
   out: "<team>/<name>.json\nkustomization.yaml"
   py -> build -> out

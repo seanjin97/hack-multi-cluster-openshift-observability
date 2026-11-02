@@ -1,5 +1,5 @@
 """Platform health: the platform team's fleet dashboard. Built by ../build.py."""
-from standard import *  # noqa: F403  the design language: helpers, units, thresholds, filters
+from components import *  # noqa: F403  the component library: panels, layout, queries, units, thresholds
 
 # Per-pod series, sliced by every filter (per_pod adds workload and node labels).
 # w: the window. RATE for graphs and tiles (widens on zoom), RANGE for tables and sizing (the whole window).

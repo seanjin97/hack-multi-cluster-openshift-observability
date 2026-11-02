@@ -1,6 +1,6 @@
 """sensor-team-1, system A (podinfo frontend -> backend in spoke-1-demo): is our CPU limit slowing our requests?
 Built by ../build.py."""
-from standard import *  # noqa: F403  the design language: helpers, units, thresholds, filters
+from components import *  # noqa: F403  the component library: panels, layout, queries, units, thresholds
 
 # Per container (per_pod keeps the selected pods and adds workload and node)
 REAL = 'container!="", container!="POD"'

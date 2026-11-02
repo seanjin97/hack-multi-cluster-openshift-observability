@@ -3,7 +3,7 @@
 ← [1. Metrics](1-metrics.md) · next: [3. Ship](3-ship.md) · design: [ADR 0004](../decisions/0004-dashboards-as-code.md)
 
 - **Where:** `platform-tools/grafana/dashboards/<team>/<name>.py`. `sensor-team-1/system_a.py` → `/d/sensor-team-1-system-a`, in Grafana folder `sensor-team-1`.
-- **How:** ask the `grafana-dashboard` skill a question, e.g. *"Is my CPU limit slowing my requests?"*. It reads the standard and writes the `.py`. Or write it yourself; the rules are below.
+- **How:** ask the `grafana-dashboard` skill a question, e.g. *"Is my CPU limit slowing my requests?"*. It composes the `.py` from the component library (`components/`). Or write it yourself; the rules are below.
 - **Copy the shape of** `sensor-team-1/system_a.py` (team) or `starforge/platform_health.py` (fleet).
 
 ```mermaid
@@ -11,12 +11,12 @@ flowchart LR
   q([Your question]) --> b{Does a built-in ACM<br/>dashboard answer it?}
   b -- "yes, all of it" --> l["Link it in the header<br/>links=[builtin(title)]"]
   b -- "one graph of it" --> r["Rebuild that graph<br/>+ 'Source: ACM title.'"]
-  b -- no --> n[New panels from<br/>standard.py helpers]
+  b -- no --> n[New panels from<br/>components]
   r --> n
 ```
 - Built-in catalog, readable offline: [`acm-builtin.md`](../../platform-tools/grafana/dashboards/acm-builtin.md). Never edit a built-in.
 
-## Page structure (every dashboard)
+## Page structure (every dashboard; conformance fails without it)
 ```
 System Vitals    4–6 tiles: is anything wrong right now?        vitals(...)
 Golden Signals   Latency | Traffic, then Errors | Saturation    golden_signals(latency=[], traffic=[], errors=[], saturation=[])
@@ -44,7 +44,7 @@ extension("Why do submissions fail?",
           grid("Failures by reason", "In the selected range.", ("Failures", f"sum by (cluster, workload, reason) ({BAD})", COUNT, PROBLEMS)))
 ```
 
-## Rules (the build fails on most of these)
+## Rules (`uv run pytest` fails on most of these; full list in [3. Ship](3-ship.md#what-conforms-to-the-golden-path-means))
 - **Filters:** every panel follows cluster → node → namespace → workload → pod.
   - Wrap per-pod metrics in `per_pod(...)`, and node metrics in `per_node(...)`.
   - A metric with neither label ends its description with `CLUSTER_ONLY`.

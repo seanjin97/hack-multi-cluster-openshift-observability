@@ -1,14 +1,17 @@
 """Builds every dashboard: <team>/<name>.py -> <team>/<name>.json, plus kustomization.yaml.
   uv run build.py            build all
   uv run build.py starforge  build one team's
-Each <team>/<name>.py defines `dashboard`. Its uid is <team>-<name> (underscores become dashes), and it
-lands in the Grafana folder named after the team."""
+Each <team>/<name>.py defines `dashboard`, built from the component library (components/). Its uid is
+<team>-<name> (underscores become dashes), and it lands in the Grafana folder named after the team.
+build.py doesn't judge dashboards: tests/test_conformance.py does, and CI gates on it."""
 import importlib.util
 import json
 import pathlib
 import sys
 
-import standard
+from grafana_foundation_sdk.cog.encoder import JSONEncoder
+
+from components import SELF
 
 HERE = pathlib.Path(__file__).parent
 
@@ -18,8 +21,12 @@ def uid(path):
     return f"{path.parent.name}-{path.stem}".replace("_", "-").lower()
 
 
+NOT_TEAMS = {"components", "tests"}  # library and tests sit beside the team folders
+
+
 def sources(team=None):
-    return sorted(p for p in HERE.glob(f"{team or '*'}/*.py") if not p.name.startswith("_"))
+    return sorted(p for p in HERE.glob(f"{team or '*'}/*.py")
+                  if not p.name.startswith("_") and p.parent.name not in NOT_TEAMS)
 
 
 def load(path):
@@ -28,6 +35,17 @@ def load(path):
     spec.loader.exec_module(module)
     assert hasattr(module, "dashboard"), f"{path}: define `dashboard = dashboard(...)`"
     return module.dashboard
+
+
+def render(builder, uid, team):
+    """Dashboard JSON for builder: uid and team tag set, panel ids numbered, links to SELF resolved."""
+    assert len(uid) <= 40, f"Grafana uids are at most 40 characters: {uid}"
+    j = json.loads(JSONEncoder().encode(builder.uid(uid).build()))
+    j["tags"].append(team)
+    nested = [c for top in j["panels"] if top["type"] == "row" for c in top.get("panels", [])]
+    for i, p in enumerate([*j["panels"], *nested], 1):
+        p["id"] = i
+    return json.loads(json.dumps(j).replace(f"/d/{SELF}?", f"/d/{uid}?"))
 
 
 def kustomization(paths):
@@ -50,7 +68,7 @@ def main(team=None):
     paths = sources(team)
     assert paths, f"no dashboards in {HERE}/{team or '*'}/"
     for p in paths:
-        j = standard.render(load(p), uid(p), p.parent.name)
+        j = render(load(p), uid(p), p.parent.name)
         p.with_suffix(".json").write_text(json.dumps(j, indent=2, sort_keys=True) + "\n")
         print(f"wrote {p.relative_to(HERE).with_suffix('.json')}: uid {j['uid']}")
     for orphan in set(HERE.glob("*/*.json")) - {p.with_suffix(".json") for p in sources()}:

@@ -1,7 +1,7 @@
 # 0004: Dashboards as code with Grafana Foundation SDK (Python, uv)
 
 - **Status:** Accepted, 2026-10-29
-- **Files:** `platform-tools/grafana/dashboards/` (`standard.py`, `build.py`, `test_standard.py`, `<team>/<name>.py`), `.claude/skills/grafana-dashboard/SKILL.md`
+- **Files:** `platform-tools/grafana/dashboards/` (`components/`, `build.py`, `tests/`, `<team>/<name>.py`), `.claude/skills/grafana-dashboard/SKILL.md`
 
 ## Context
 - Every team needs dashboards in ACM Grafana, and they should all share one design language: layout, row order, units, colours, thresholds and variables (README, constraint "Consistent design"). That needs dashboards to be code, with the design language in one place.
@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-  src[dashboards/team/name.py<br/>+ standard.py] -- uv run build.py --> json[dashboards/team/name.json<br/>committed]
+  src[dashboards/team/name.py<br/>+ components/] -- uv run build.py --> json[dashboards/team/name.json<br/>committed]
   json --> k[kustomization.yaml<br/>configMapGenerator] -- ArgoCD sync from main --> cm[ConfigMap<br/>grafana-custom-dashboard] --> acm[ACM Grafana]
 ```
 
@@ -84,6 +84,7 @@ The dashboard is still raw JSON (`config_json`), just wrapped in a provider, so 
 - **C: Grafana Foundation SDK in Python, run with uv.**
   - Maintainability: Grafana keeps the builders in step with its own schema, so we maintain only `standard.py`.
   - Extensibility: the design language lives in `standard.py` helpers. A new standard panel is one function, and app teams import the same file.
+  - Update (2026-11-02): `standard.py` was split into the `components/` package (one module per concern, team files `from components import *`), and the rules moved out of the library into `tests/test_conformance.py`. Components build, conformance judges, the skill guides.
   - DX: Python is already a repo dependency. Type errors fail `uv run`, not Grafana, and the skill edits small, readable diffs.
 - **Runner-up:** B, if we ever can't take a dependency. Rejected for now because we would own Grafana's schema.
 
@@ -98,7 +99,7 @@ The dashboard is still raw JSON (`config_json`), just wrapped in a provider, so 
 
 ## Consequences
 - **Generated JSON drift:** someone could edit the `.json` directly. The skill always regenerates from `.py` and then diffs; any difference means a hand edit.
-- **UI-built dashboards:** porting them into code is a manual step. The skill does it: export JSON, then rewrite with `standard.py`.
+- **UI-built dashboards:** porting them into code is a manual step. The skill does it: export JSON, then rewrite with `components/`.
 - **Public preview:** the builder API may change between `0.0.x` releases. Pinning protects us; read the changelog before bumping.
 - **Grafana upgrades:** after ACM upgrades Grafana, bump the SDK pin and regenerate. Panels that fail to build show what changed.
 - **One target:** the skill emits only ACM ConfigMaps. Dashboards that exist today as `GrafanaDashboard` CRs stay where they are until someone ports them to code.
@@ -109,7 +110,7 @@ The dashboard is still raw JSON (`config_json`), just wrapped in a provider, so 
   - ACM's `grafana-dashboard-loader` reported success, but it posts to the classic `/api/dashboards/db`.
   - Grafana stored it as a classic dashboard (`storedVersion: v0alpha1`) and dropped `elements` and `layout`, so it opened empty.
   - v2 storage and layouts are behind Grafana feature toggles that are off here. ACM's operator owns `grafana.ini` and reverts edits.
-- **Revisit when** ACM's loader writes through Grafana's v2 API, or ACM enables the v2 toggles. Panels go through `standard.py` helpers, so a move mostly changes `standard.py`, not team dashboards.
+- **Revisit when** ACM's loader writes through Grafana's v2 API, or ACM enables the v2 toggles. Panels go through `components/`, so a move mostly changes the library, not team dashboards.
 
 ## Sources
 - Grafana Foundation SDK (Grafana >= 12 note, public-preview status, Python builders): https://github.com/grafana/grafana-foundation-sdk

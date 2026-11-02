@@ -21,9 +21,9 @@ flowchart LR
 | You need | Platform does | How to ask |
 |---|---|---|
 | A platform metric that isn't forwarded (cAdvisor, kube-state-metrics, node-exporter) | Approves your `metrics-allowlist.yaml` change | Put it in your dashboard MR |
-| A panel type or rule the standard can't do | Changes `standard.py`, test-first ([extend](../platform/extend.md)) | Separate MR or issue |
+| A panel type or rule the library can't do | Adds a component or conformance rule, test-first ([extend](../platform/extend.md)) | Separate MR or issue |
 | More than a few hundred series from one app | Reviews hub storage cost | Before you ship |
-| A "higher is better" colour set (success rates) | Not in the standard yet: use `NEUTRAL` until then | Issue |
+| A "higher is better" colour set (success rates) | Not in the library yet: use `NEUTRAL` until then | Issue |
 | Everything else | Nothing | — |
 
 How it works underneath: [metric path](../architecture/README.md#metric-path) and [dashboard delivery](../architecture/README.md#dashboard-delivery).

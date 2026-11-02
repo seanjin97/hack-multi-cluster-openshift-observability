@@ -1,6 +1,6 @@
 # Dependencies for the dashboard generators (ADR 0004). uv reads this; no venv to manage by hand.
 #   uv run build.py          build dashboards
-#   uv run pytest            behaviour tests
+#   uv run pytest            component tests + golden-path conformance (tests/)
 [project]
 name = "starforge-dashboards"
 version = "0"
@@ -13,5 +13,5 @@ dependencies = [
 dev = ["pytest"]
 
 [tool.pytest.ini_options]
-testpaths = ["."]
-python_files = ["test_*.py"]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]  # components/, build.py and tests/helpers.py import by name
