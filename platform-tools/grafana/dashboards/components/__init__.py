@@ -1,4 +1,4 @@
-"""STARFORGE dashboard component library: the design language as code (ADR 0004).
+"""STARFORGE dashboard component library: the design language as code (ADR 0005).
 Team dashboards build from these components only:  from components import *
 Components build; tests/test_conformance.py judges whether a dashboard follows the golden path.
 

@@ -1,4 +1,4 @@
-# Dependencies for the dashboard generators (ADR 0004). uv reads this; no venv to manage by hand.
+# Dependencies for the dashboard generators (ADR 0005). uv reads this; no venv to manage by hand.
 #   uv run build.py          build dashboards
 #   uv run pytest            component tests + golden-path conformance (tests/)
 [project]

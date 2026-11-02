@@ -51,7 +51,7 @@ flowchart LR
 
 | | OpenShift spoke | k3s spoke |
 |---|---|---|
-| Metric source | Platform Prometheus, federated | ACM-installed Prometheus |
+| Metric source ([0003](0003-acm-observability-addon.md)) | Platform Prometheus, federated | ACM-installed Prometheus |
 | etcd, cluster version, operators | Yes | No (SQLite, not OpenShift) |
 | `vendor` label | OpenShift | Other |
 | Routes, SCCs, OAuth, OLM | Yes | No |

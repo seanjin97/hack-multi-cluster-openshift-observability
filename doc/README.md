@@ -12,8 +12,9 @@
 - **Decisions:**
   - [0001 k3d spokes](decisions/0001-k3d-spoke-clusters.md)
   - [0002 trimmed ACM](decisions/0002-trimmed-acm-sizing.md)
-  - [0003 per-pod app metrics](decisions/0003-per-pod-app-metrics.md)
-  - [0004 dashboards as code](decisions/0004-dashboards-as-code.md)
+  - [0003 ACM observability addon](decisions/0003-acm-observability-addon.md)
+  - [0004 per-pod app metrics](decisions/0004-per-pod-app-metrics.md)
+  - [0005 dashboards as code](decisions/0005-dashboards-as-code.md)
 - **Research:** [Network Observability Operator](research/network-observability.md).
 - **Built-in ACM dashboards:** [acm-builtin.md](../platform-tools/grafana/dashboards/acm-builtin.md), generated.
 - **Legacy, not the golden path:**

@@ -1,6 +1,6 @@
 # Platform: extend the component library and the golden path
 
-← [Docs](../README.md) · [setup](setup.md) · [operate](operate.md) · design: [ADR 0004](../decisions/0004-dashboards-as-code.md)
+← [Docs](../README.md) · [setup](setup.md) · [operate](operate.md) · design: [ADR 0005](../decisions/0005-dashboards-as-code.md)
 
 App teams only touch `<team>/*.py`. This page is for whoever owns the rest of `platform-tools/grafana/dashboards/`.
 
@@ -73,7 +73,7 @@ flowchart LR
 
 ## Housekeeping
 - **SDK bump:** edit `pyproject.toml`, run `uv lock`, `uv run pytest` and `uv run build.py`, then commit the JSON.
-- **Schema:** stay on the classic `dashboard.Dashboard`; ACM's loader can't load v2 (ADR 0004).
+- **Schema:** stay on the classic `dashboard.Dashboard`; ACM's loader can't load v2 (ADR 0005).
 - **ACM upgrade:** run `python3 acm_builtin.py` (needs hub access) and commit `acm-builtin.md`.
 - **Allowlist request:** check the series count first, since every series is stored on the hub.
 - **Check real data:** `./check-queries.sh <team>/<name>.json` (needs hub access).

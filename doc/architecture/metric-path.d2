@@ -24,7 +24,7 @@ spoke: Spoke cluster (any) {
     prom: Prometheus {icon: ${i-prom}}
     collector: metrics-collector\nACM allowlist + custom allowlist
     podmon -> prom: scrape config
-    prom -> collector: federate
+    prom -> collector: "/federate?match[]=allowlist\nlatest sample only"
   }
   app -> addon.prom: scrape every 30s
   kubelet -> addon.prom: scrape
@@ -33,16 +33,26 @@ spoke: Spoke cluster (any) {
 
 hub: Hub (ACM) {
   icon: ${i-openshift}
-  api: observatorium-api {icon: ${i-thanos}}
-  thanos: Thanos receive / store {class: store; icon: ${i-thanos}}
+  mco: MCO operator\naddon + client cert (CSR, rotated)
+  api: observatorium-api\nchecks mTLS cert {icon: ${i-thanos}}
+  receive: thanos-receive\nrecent data {icon: ${i-thanos}}
+  s3: Silo S3\n2h blocks {class: store}
+  store: thanos-store\nolder data {icon: ${i-thanos}}
+  query: thanos-query\n+ query-frontend {icon: ${i-thanos}}
   rbac: rbac-query-proxy\nonly clusters you may see
   grafana: ACM Grafana\nyour team's folder {icon: ${i-grafana}}
-  api -> thanos
+  api -> receive
+  receive -> s3: upload
+  store -> s3: read
+  query -> receive
+  query -> store
   grafana -> rbac: PromQL + your token
-  rbac -> thanos
+  rbac -> query
 }
 
-spoke.addon.collector -> hub.api: push every 30s (mTLS)
+hub.mco -> spoke.addon: installs addon, issues cert {style.stroke-dash: 3}
+
+spoke.addon.collector -> hub.api: remote-write every 30s\n+ cluster label (mTLS)
 
 legend: {
   near: bottom-center

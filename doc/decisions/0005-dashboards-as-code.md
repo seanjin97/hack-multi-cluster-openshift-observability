@@ -1,10 +1,10 @@
-# 0004: Dashboards as code with Grafana Foundation SDK (Python, uv)
+# 0005: Dashboards as code with Grafana Foundation SDK (Python, uv)
 
 - **Status:** Accepted, 2026-10-29
 - **Files:** `platform-tools/grafana/dashboards/` (`components/`, `build.py`, `tests/`, `<team>/<name>.py`), `.claude/skills/grafana-dashboard/SKILL.md`
 
 ## Context
-- Every team needs dashboards in ACM Grafana, and they should all share one design language: layout, row order, units, colours, thresholds and variables (README, constraint "Consistent design"). That needs dashboards to be code, with the design language in one place.
+- Every team needs dashboards in ACM Grafana, and they should all share one design language: layout, row order, units, colours, thresholds and variables, so an engineer moving between dashboards mid-incident doesn't relearn the layout. That needs dashboards to be code, with the design language in one place.
 - **Author:** a Claude skill writes and edits the dashboards, and humans review the diffs. Platform and app teams use the same skill and the same standard.
 - **Target: ACM Grafana only.** Every custom dashboard lives there, so engineers have one place to look, next to ACM's own dashboards and with the same per-cluster RBAC (`rbac-query-proxy`).
   - ACM Grafana 12.4.0 is operator-owned and sits behind the OpenShift OAuth proxy, with no API token. It loads only ConfigMaps labelled `grafana-custom-dashboard: "true"` (README, Grafana section).

@@ -1,6 +1,7 @@
-# 0003: Every pod's own metrics reach the hub, enforced with Kyverno
+# 0004: Every pod's own metrics reach the hub, enforced with Kyverno
 
 - **Status:** Accepted, 2026-10-27
+- **Builds on:** [0003](0003-acm-observability-addon.md): spoke metrics go through ACM's addon, not our own Prometheus.
 - **Files:** `platform-tools/acm/spoke-clusters/metrics/manifestwork.yaml`, `kyverno/`, `check-metrics.sh`, `spoke-*/apps.yaml`
 - **Onboarding guide:** [app-teams/1-metrics.md](../app-teams/1-metrics.md)
 
@@ -36,11 +37,11 @@ flowchart LR
 ```
 
 ## Why not the alternatives
+Own Prometheus per spoke and remote-write to observatorium-api: rejected in [0003](0003-acm-observability-addon.md#why-not-the-alternatives).
+
 | Option | Rejected because |
 |---|---|
-| Own Prometheus per spoke (like OpenShift UWL) | Getting it to the hub still means editing ACM's side (federate or remote-write with ACM's client cert). +200MB per spoke, more hops |
 | Force ACM's UWL collector (dummy `openshift-*` StatefulSet) | It still reads ACM's Prometheus, and failing recording-rule queries break every push |
-| Remote-write to observatorium-api | Skips ACM's collector and allowlist; needs a copy of a rotating client cert |
 | Apply the objects to the spoke directly | ACM deletes and recreates the addon namespace on re-registration, which wipes them. ManifestWork restores them |
 | Annotations (`prometheus.io/scrape`) | Not the prometheus-operator convention; a named port is enough |
 | Monitors for ACM's own agents | Vendor pods change with ACM upgrades; pod-level metrics are enough |

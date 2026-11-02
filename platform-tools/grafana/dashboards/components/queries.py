@@ -2,7 +2,7 @@
 
 # --- Filters: every panel slices on cluster, node, namespace, workload and pod ---
 C = 'cluster=~"$cluster"'
-APP = 'job="open-cluster-management-addon-observability/app-metrics"'  # golden-path app metrics, ADR 0003
+APP = 'job="open-cluster-management-addon-observability/app-metrics"'  # golden-path app metrics, ADR 0004
 CLUSTER_ONLY = "Cluster filter only."  # end a description with this when the metric has no node/pod labels
 
 # Workload = the pod's owner, with a Deployment's ReplicaSet hash dropped. Built from kube_pod_info

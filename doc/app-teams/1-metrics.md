@@ -1,6 +1,6 @@
 # 1. Metrics: get your app's metrics to the hub
 
-← [App teams](README.md) · next: [2. Dashboard](2-dashboards.md) · design: [ADR 0003](../decisions/0003-per-pod-app-metrics.md)
+← [App teams](README.md) · next: [2. Dashboard](2-dashboards.md) · design: [ADR 0004](../decisions/0004-per-pod-app-metrics.md)
 
 ![Metric path](../architecture/metric-path.svg)
 

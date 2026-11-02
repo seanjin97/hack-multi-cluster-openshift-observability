@@ -1,6 +1,6 @@
 # 2. Dashboard: write it as Python
 
-← [1. Metrics](1-metrics.md) · next: [3. Ship](3-ship.md) · design: [ADR 0004](../decisions/0004-dashboards-as-code.md)
+← [1. Metrics](1-metrics.md) · next: [3. Ship](3-ship.md) · design: [ADR 0005](../decisions/0005-dashboards-as-code.md)
 
 - **Where:** `platform-tools/grafana/dashboards/<team>/<name>.py`. `sensor-team-1/system_a.py` → `/d/sensor-team-1-system-a`, in Grafana folder `sensor-team-1`.
 - **How:** ask the `grafana-dashboard` skill a question, e.g. *"Is my CPU limit slowing my requests?"*. It composes the `.py` from the component library (`components/`). Or write it yourself; the rules are below.

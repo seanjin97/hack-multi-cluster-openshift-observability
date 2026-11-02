@@ -15,7 +15,7 @@
 | `oc` | Talking to all 3 clusters, hub and spokes. No need for `kubectl` | Ships with crc, step 9 below |
 | Docker | Runs the k3s spoke nodes as containers. Any Docker works; this guide uses [Colima](https://github.com/abiosoft/colima) | `brew install colima docker` |
 | `k3d` | Creates the k3s spoke clusters | `brew install k3d` |
-| `uv` | Generates Grafana dashboards from Python ([ADR 0004](../decisions/0004-dashboards-as-code.md)) | `brew install uv` |
+| `uv` | Generates Grafana dashboards from Python ([ADR 0005](../decisions/0005-dashboards-as-code.md)) | `brew install uv` |
 
 The scripts also use `python3` and `base64`, and the metrics query below uses `curl`. All come with macOS (`python3` via the Xcode command line tools).
 
@@ -89,7 +89,7 @@ crc is the only OpenShift cluster (the ACM hub). The spokes are real, lightweigh
 
 What you get:
 - Each `spoke-N` has 2 nodes (1 server, 1 agent), with traefik, servicelb and metrics-server turned off to save memory. All spokes share `k3d-cluster.yaml`.
-- ACM installs its observability addon on each one (`open-cluster-management-addon-observability`): a small Prometheus, kube-state-metrics and node-exporter, pushing to the hub every 30s (`interval` in `04-observability.yaml`; ACM's default is 5 min).
+- ACM installs its observability addon on each one (`open-cluster-management-addon-observability`): a small Prometheus, kube-state-metrics and node-exporter, pushing to the hub every 30s (`interval` in `04-observability.yaml`; ACM's default is 5 min). Why the addon and not our own Prometheus: [ADR 0003](../decisions/0003-acm-observability-addon.md).
 - Sample apps in a `spoke-N-demo` namespace, so each cluster's graphs look different and the namespace says which cluster it's on: `spoke-1` runs podinfo (frontend → backend), `spoke-2` runs nginx and redis. Both have a tiny load generator. Edit `spoke-N/apps.yaml` to change them; `spoke-N/kustomization.yaml` puts them in the namespace.
 - Every pod's own metrics: any container port named `metrics`, in any namespace, is scraped and sent to the hub (`metrics/manifestwork.yaml`, delivered from the hub). Kyverno rejects pods without one in `golden-path.level=L1` namespaces (`kyverno/`). How app teams onboard: [app teams → metrics](../app-teams/1-metrics.md). `./platform-tools/acm/spoke-clusters/check-metrics.sh` checks every running spoke pod has metrics on the hub.
 - To add a spoke, copy `spoke-2/` to `spoke-3/`, replace `spoke-2` with `spoke-3` in its files, and re-run. A third spoke needs more inotify watchers in Colima than the default, or k3s fails with `too many open files`: `colima ssh -- sudo sysctl fs.inotify.max_user_instances=1024`. `./spokes.sh down` removes them all, from ACM and k3d.

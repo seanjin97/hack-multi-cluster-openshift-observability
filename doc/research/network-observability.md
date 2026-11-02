@@ -15,7 +15,7 @@
 flowchart LR
   subgraph have[Have today]
     res[Resource metrics<br/>CPU, mem, disk<br/>cAdvisor, ksm, node-exporter]
-    app[App metrics<br/>pod's own /metrics<br/>ADR 0003]
+    app[App metrics<br/>pod's own /metrics<br/>ADR 0004]
   end
   subgraph gap[Gap: NetObserv]
     net[Network metrics<br/>L3/L4 flows, drops,<br/>RTT, DNS]

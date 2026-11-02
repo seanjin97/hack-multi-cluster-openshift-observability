@@ -1,4 +1,4 @@
-# Gate for the central dashboards repo (ADR 0004). ArgoCD syncs whatever lands on main,
+# Gate for the central dashboards repo (ADR 0005). ArgoCD syncs whatever lands on main,
 # so main must only ever hold dashboards that follow the golden path and match their source.
 # Devs only need the generators and uv; the cluster is never touched here.
 name: dashboards
