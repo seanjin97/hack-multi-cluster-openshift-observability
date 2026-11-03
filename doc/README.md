@@ -16,6 +16,7 @@
   - [0004 per-pod app metrics](decisions/0004-per-pod-app-metrics.md)
   - [0005 dashboards as code](decisions/0005-dashboards-as-code.md)
   - [0006 maturity levels](decisions/0006-maturity-levels.md)
+  - [0007 metrics only, Prometheus + Grafana](decisions/0007-metrics-only-prometheus.md)
 - **Research:** [Network Observability Operator](research/network-observability.md).
 - **Built-in ACM dashboards:** [acm-builtin.md](../platform-tools/grafana/dashboards/acm-builtin.md), generated.
 - **Legacy, not the golden path:**
