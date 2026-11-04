@@ -1,0 +1,18 @@
+# ACM's Prometheus scrapes the port named "metrics" (doc/app-teams/1-metrics.md).
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: worker-1}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: worker-1}}
+  template:
+    metadata: {labels: {app: worker-1}}
+    spec:
+      containers:
+        - name: worker-1
+          image: worker-1:dev
+          imagePullPolicy: Never
+          ports: [{name: metrics, containerPort: 8080}]   # serves /metrics
+          readinessProbe: {httpGet: {path: /metrics, port: metrics}}
+          livenessProbe: {httpGet: {path: /metrics, port: metrics}}
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {memory: 64Mi}}

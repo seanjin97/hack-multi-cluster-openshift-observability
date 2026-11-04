@@ -1,0 +1,7 @@
+# worker-1 on spoke-2. Image is local-only for now:
+#   make docker && k3d image import worker-1:dev -c spoke-2
+#   oc --context k3d-spoke-2 apply -k deploy/
+namespace: sensor-team-2
+resources:
+  - namespace.yaml
+  - deployment.yaml
