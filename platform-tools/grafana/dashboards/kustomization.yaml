@@ -8,6 +8,9 @@ configMapGenerator:
   - name: grafana-dashboard-sensor-team-1-system-a
     files: [sensor-team-1/system_a.json]
     options: {annotations: {observability.open-cluster-management.io/dashboard-folder: sensor-team-1}}
+  - name: grafana-dashboard-sensor-team-2-worker-1
+    files: [sensor-team-2/worker_1.json]
+    options: {annotations: {observability.open-cluster-management.io/dashboard-folder: sensor-team-2}}
   - name: grafana-dashboard-starforge-platform-health
     files: [starforge/platform_health.json]
     options: {annotations: {observability.open-cluster-management.io/dashboard-folder: starforge}}

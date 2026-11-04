@@ -1,4 +1,7 @@
+# L1 (Operate): pods need a metrics port, probes and resources. Rules: doc/app-teams/0-levels.md
 apiVersion: v1
 kind: Namespace
 metadata:
   name: sensor-team-2
+  labels: {starlab-platform/maturity: L1, starlab-platform/team: sensor-team-2}
+  annotations: {starlab-platform/contact: "#sensor-team-2-oncall"}
