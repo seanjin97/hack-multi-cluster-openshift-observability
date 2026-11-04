@@ -3,8 +3,9 @@
 # Devs only need the generators and uv; the cluster is never touched here.
 name: dashboards
 on:
+  # Every PR, no path filter: `gate` is a required check on main, and a required check that
+  # a path filter skips stays "pending" forever, blocking unrelated PRs. It runs in seconds.
   pull_request:
-    paths: [platform-tools/grafana/dashboards/**]
   push:
     branches: [main]
     paths: [platform-tools/grafana/dashboards/**]
