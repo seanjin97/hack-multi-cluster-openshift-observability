@@ -38,27 +38,19 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Share of CPU periods where a container hit its CPU limit. Above 10%: open Saturation.",
+      "description": "Requests per second across the selection. Drops to zero: the app stopped serving. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
-              },
-              {
-                "color": "orange",
-                "value": 0.1
-              },
-              {
-                "color": "red",
-                "value": 0.25
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "reqps"
         },
         "overrides": []
       },
@@ -92,12 +84,12 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum by (cluster) ((rate(container_cpu_cfs_throttled_periods_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster) ((rate(container_cpu_cfs_periods_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "expr": "sum((rate(http_request_duration_seconds_count{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Throttled CPU periods",
+      "title": "Requests/s",
       "transparent": false,
       "type": "stat"
     },
@@ -106,75 +98,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "95th percentile request duration across the selection. Above 300ms: compare with throttling below.",
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 0.3
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "id": 3,
-      "interval": "1m",
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "expr": "histogram_quantile(0.95, sum by (cluster, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "title": "p95 latency",
-      "transparent": false,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "Share of requests answered 5xx.",
+      "description": "Share of requests answered 5xx. Above 1%: open Errors. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -201,10 +125,10 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 1
       },
-      "id": 4,
+      "id": 3,
       "interval": "1m",
       "options": {
         "colorMode": "background",
@@ -242,7 +166,75 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The busiest container's CPU as a share of its limit. Near 100%: the kernel throttles it.",
+      "description": "95th percentile request duration. Above 300ms: open Latency. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.3
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (cluster, le) ((rate(http_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"open-cluster-management-addon-observability/app-metrics\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "p95 latency",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "The fullest container's memory as a share of its limit. Near 100%: it gets OOM-killed. Empty: no memory limit set.",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -296,6 +288,142 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "expr": "max((sum by (cluster, namespace, pod, container) ((container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, pod, container) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Peak memory / limit",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of CPU periods where a container hit its CPU limit. Above 10%: open Saturation.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (cluster) ((rate(container_cpu_cfs_throttled_periods_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster) ((rate(container_cpu_cfs_periods_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Throttled CPU periods",
+      "transparent": false,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "The busiest container's CPU as a share of its limit. Near 100%: the kernel throttles it.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 7,
+      "interval": "1m",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "expr": "max((sum by (cluster, namespace, pod, container) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, namespace, pod, container) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))))",
           "legendFormat": "",
           "refId": "A"
@@ -311,9 +439,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 9
       },
-      "id": 6,
+      "id": 8,
       "panels": [],
       "title": "Golden Signals",
       "type": "row"
@@ -323,9 +451,9 @@
         "h": 2,
         "w": 12,
         "x": 0,
-        "y": 6
+        "y": 10
       },
-      "id": 7,
+      "id": 9,
       "options": {
         "content": "#### Latency <small>\u00b7 How long requests take</small>",
         "mode": "markdown"
@@ -339,9 +467,9 @@
         "h": 2,
         "w": 12,
         "x": 12,
-        "y": 6
+        "y": 10
       },
-      "id": 8,
+      "id": 10,
       "options": {
         "content": "#### Traffic <small>\u00b7 How much demand</small>",
         "mode": "markdown"
@@ -355,7 +483,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Request latency per workload. Rising together with throttling: the limit is the cause.",
+      "description": "Request latency per workload. Above 300ms: find the endpoint in an extension. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -390,9 +518,9 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 8
+        "y": 12
       },
-      "id": 9,
+      "id": 11,
       "interval": "1m",
       "options": {
         "legend": {
@@ -462,9 +590,9 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 8
+        "y": 12
       },
-      "id": 10,
+      "id": 12,
       "interval": "1m",
       "options": {
         "legend": {
@@ -499,7 +627,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Load per workload. Throttling under rising load: the limit is too low for peak.",
+      "description": "Load per workload. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -514,9 +642,9 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 8
+        "y": 12
       },
-      "id": 11,
+      "id": 13,
       "interval": "1m",
       "options": {
         "legend": {
@@ -566,9 +694,9 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 8
+        "y": 12
       },
-      "id": 12,
+      "id": 14,
       "interval": "1m",
       "options": {
         "legend": {
@@ -603,9 +731,9 @@
         "h": 2,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 20
       },
-      "id": 13,
+      "id": 15,
       "options": {
         "content": "#### Errors <small>\u00b7 How often requests fail</small>",
         "mode": "markdown"
@@ -619,9 +747,9 @@
         "h": 2,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 20
       },
-      "id": 14,
+      "id": 16,
       "options": {
         "content": "#### Saturation <small>\u00b7 How full the system is</small>",
         "mode": "markdown"
@@ -635,7 +763,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Share of requests answered 5xx. Timeouts from heavy throttling can show up here.",
+      "description": "Share of requests answered 5xx. Above 1%: check the workload's logs. Empty: the app doesn't emit http_request_duration_seconds yet; see doc/app-teams/1-metrics.md.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -670,9 +798,9 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 18
+        "y": 22
       },
-      "id": 15,
+      "id": 17,
       "interval": "1m",
       "options": {
         "legend": {
@@ -722,9 +850,9 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 18
+        "y": 22
       },
-      "id": 16,
+      "id": 18,
       "interval": "1m",
       "options": {
         "legend": {
@@ -751,6 +879,78 @@
         }
       ],
       "title": "Restarts by pod",
+      "transparent": false,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Working-set memory against the limit. Near 100%: raise the limit or find the leak. Empty: no memory limit set.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 22
+      },
+      "id": 19,
+      "interval": "1m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "asc"
+        }
+      },
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (cluster, workload) ((container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))) / (sum by (cluster, workload) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"memory\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\"))))",
+          "legendFormat": "{{cluster}} {{workload}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory used / limit by workload",
       "transparent": false,
       "type": "timeseries"
     },
@@ -793,10 +993,10 @@
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 12,
-        "y": 18
+        "x": 18,
+        "y": 22
       },
-      "id": 17,
+      "id": 20,
       "interval": "1m",
       "options": {
         "legend": {
@@ -827,74 +1027,88 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "Used cores per workload against what it reserved and its ceiling. Used near the limit line: throttled. Source: ACM Kubernetes / Compute Resources / Pod.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "fillOpacity": 10
-          },
-          "min": 0,
-          "unit": "suffix: cores"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 18
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
       },
-      "id": 18,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "asc"
-        }
-      },
-      "repeatDirection": "h",
-      "targets": [
+      "id": 21,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (cluster, workload) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
-          "legendFormat": "{{cluster}} {{workload}} used",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+          "description": "Used cores per workload against what it reserved and its ceiling. Used near the limit line: throttled. Source: ACM Kubernetes / Compute Resources / Pod.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "fillOpacity": 10
+              },
+              "min": 0,
+              "unit": "suffix: cores"
+            },
+            "overrides": []
           },
-          "expr": "sum by (cluster, workload) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
-          "legendFormat": "{{cluster}} {{workload}} request",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 31
           },
-          "expr": "sum by (cluster, workload) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
-          "legendFormat": "{{cluster}} {{workload}} limit",
-          "refId": "C"
+          "id": 23,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, workload) ((rate(container_cpu_usage_seconds_total{cluster=~\"$cluster\", container!=\"\", container!=\"POD\"}[$__rate_interval])) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "legendFormat": "{{cluster}} {{workload}} used",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, workload) ((kube_pod_container_resource_requests{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "legendFormat": "{{cluster}} {{workload}} request",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, workload) ((kube_pod_container_resource_limits{cluster=~\"$cluster\", resource=\"cpu\"}) * on (cluster, namespace, pod) group_left (workload, node) max by (cluster, namespace, pod, node, workload) (label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.+)-[a-z0-9]+\") or label_replace(kube_pod_info{cluster=~\"$cluster\", namespace=~\"$namespace\", node=~\"$node\", pod=~\"$pod\", created_by_name=~\"(?:$workload)(?:-[a-z0-9]+)?\", created_by_kind!=\"ReplicaSet\"}, \"workload\", \"$1\", \"created_by_name\", \"(.*)\")))",
+              "legendFormat": "{{cluster}} {{workload}} limit",
+              "refId": "C"
+            }
+          ],
+          "title": "CPU used vs request and limit",
+          "transparent": false,
+          "type": "timeseries"
         }
       ],
-      "title": "CPU used vs request and limit",
-      "transparent": false,
-      "type": "timeseries"
+      "title": "Is CPU use close to the request and limit?",
+      "type": "row"
     },
     {
       "collapsed": true,
@@ -902,9 +1116,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 31
       },
-      "id": 19,
+      "id": 22,
       "panels": [
         {
           "datasource": {
@@ -1029,9 +1243,9 @@
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 27
+            "y": 32
           },
-          "id": 20,
+          "id": 24,
           "options": {
             "cellHeight": "sm",
             "footer": {

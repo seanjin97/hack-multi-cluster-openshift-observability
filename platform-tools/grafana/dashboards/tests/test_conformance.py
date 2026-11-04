@@ -12,9 +12,11 @@ from grafana_foundation_sdk.models import dashboard as dm
 
 import build
 import components as s
-from helpers import ext as _ext, ok, page, table
+from helpers import ext as _ext, ok, page, render, table
 
 _WINDOW = re.compile(r"\[([^\]]+)\]")
+_APP_METRIC = re.compile(r"([a-zA-Z_:][a-zA-Z0-9_:]*)\{[^}]*" + re.escape(s.APP))
+RED = "http_request_duration_seconds"  # the golden-path histogram: the one app metric allowed above the extensions
 _TITLE_WINDOW = re.compile(r"\((\d+[smhdw])\)$")
 
 
@@ -40,7 +42,28 @@ def check(j):
     assert rows[:2] == [("System Vitals", False), ("Golden Signals", False)], \
         f"open with vitals(...) then golden_signals(...), got {rows[:2]}"
     assert all(c for _, c in rows[2:]), f"everything after Golden Signals is an extension(...), got {rows[2:]}"
-    for panels in sections_of(j):
+    sections = sections_of(j)
+    # Standard panels: every page opens with the same RED + saturation panels, unchanged, in the same places
+    vit, gold = sections[0], [p for p in sections[1] if p["type"] != "text"]
+    want_v = [_shown(p.build()) for p in s.layout.standard_vitals()]
+    assert [_shown(p) for p in vit[:len(want_v)]] == want_v, \
+        f"System Vitals opens with the standard tiles {[t for t, _ in want_v]}, unchanged: build it with vitals(...)"
+    std = s.layout.standard_signals()
+    by_title = {p["title"]: p for p in gold}
+    for quadrant, p in std.items():
+        t, e = _shown(p.build())
+        assert t in by_title and _shown(by_title[t]) == (t, e), \
+            f"Golden Signals {quadrant} opens with the standard {t!r}, unchanged: build it with golden_signals(...)"
+    # Team metrics (scraped through APP) answer the team's own questions, so they go in an extension
+    for p in [*vit, *gold]:
+        for target in p.get("targets", []):
+            team = {m for m in _APP_METRIC.findall(target["expr"]) if not m.startswith(RED)}
+            assert not team, f"{p.get('title')}: team metric {sorted(team)} goes in an extension(...), " \
+                             f"not System Vitals or Golden Signals (they hold the standard RED panels)"
+    titles = [p.get("title") for sec in sections for p in sec if p["type"] != "text"]
+    dupes = {t for t in titles if titles.count(t) > 1}
+    assert not dupes, f"panel titles are unique on the page; {sorted(dupes)} repeat (the standard panels are already there)"
+    for panels in sections:
         # Layout
         lines, crowded = defaultdict(int), defaultdict(int)
         for p in panels:
@@ -82,6 +105,13 @@ def check(j):
                     f"{t}: slice on the filters with per_pod()/per_node(), or end the description with {s.CLUSTER_ONLY!r}"
 
 
+def _shown(p):
+    """(title, expressions) of a panel, as JSON or as an SDK model: what the standard rule compares."""
+    if not isinstance(p, dict):
+        p = {"title": p.title, "targets": [{"expr": t.expr} for t in p.targets or []]}
+    return p.get("title"), [t["expr"] for t in p.get("targets", [])]
+
+
 # --- every committed team dashboard conforms ---
 @pytest.mark.parametrize("path", build.sources(), ids=lambda p: f"{p.parent.name}/{p.name}")
 def test_team_dashboard_conforms(path):
@@ -114,6 +144,54 @@ def test_a_conforming_page_passes():
 def test_page_out_of_structure_fails(sections, rule):
     with pytest.raises(AssertionError, match=rule):
         checked(s.dashboard("T", "d", [], *sections()))
+
+
+# standard panels: RED + saturation on every page, team metrics below
+def test_standard_panels_are_on_every_page():
+    titles = {p.get("title") for top in render(s.vitals(), s.golden_signals())["panels"] for p in [top, *top.get("panels", [])]}
+    assert s.STANDARD_TITLES <= titles
+
+
+def test_page_without_the_standard_vitals_fails():
+    b = page()
+    b._internal.panels[1].targets[0].expr = s.per_pod(f"up{{{s.C}}}")  # first standard tile, query swapped
+    with pytest.raises(AssertionError, match="standard tiles"):
+        checked(b)
+
+
+def test_page_with_a_changed_standard_signal_fails():
+    b = page()
+    p = next(p for p in b._internal.panels if getattr(p, "title", None) == "p95 by workload")
+    p.title = "p99 by workload"
+    with pytest.raises(AssertionError, match="Latency|latency"):
+        checked(b)
+
+
+TEAM = s.per_pod(f"rate(sensor_readings_total{{{s.C}, {s.APP}}}[{s.RATE}])")
+
+
+@pytest.mark.parametrize("section", [
+    lambda: s.vitals(s.tile("Readings", "d", f"sum({TEAM})", s.REQPS)),
+    lambda: s.golden_signals(traffic=[s.graph("Readings", "d", s.REQPS, (f"sum by (cluster) ({TEAM})", "{{cluster}}"))]),
+])
+def test_team_metric_above_the_extensions_fails(section):
+    with pytest.raises(AssertionError, match="extension"):
+        checked(page(section()))
+
+
+def test_team_metric_in_an_extension_passes():
+    ext(s.graph("Readings", "d", s.REQPS, (f"sum by (cluster) ({TEAM})", "{{cluster}}")))
+
+
+def test_red_histogram_may_add_panels_above_the_extensions():
+    lat = s.per_pod(f"rate(http_request_duration_seconds_bucket{{{s.C}, {s.APP}}}[{s.RATE}])")
+    checked(page(s.golden_signals(latency=[s.graph("p95 by path", "d", s.SECONDS,
+                                                   (f"histogram_quantile(0.95, sum by (cluster, path, le) ({lat}))", "{{cluster}}"))])))
+
+
+def test_repeating_a_standard_panel_fails():
+    with pytest.raises(AssertionError, match="unique"):
+        ext(ok("p95 latency"))
 
 
 # panels and queries

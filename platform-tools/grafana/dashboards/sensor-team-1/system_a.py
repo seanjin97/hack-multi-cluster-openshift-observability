@@ -11,7 +11,6 @@ THROTTLED = lambda w=RATE: per_pod(f"rate(container_cpu_cfs_throttled_periods_to
 PERIODS = lambda w=RATE: per_pod(f"rate(container_cpu_cfs_periods_total{{{C}, {REAL}}}[{w}])")  # noqa: E731
 # Golden-path app metrics (doc/app-teams/1-metrics.md)
 REQS = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_count{{{C}, {APP}}}[{w}])")  # noqa: E731
-ERRS = lambda w=RATE: per_pod(f'rate(http_request_duration_seconds_count{{{C}, {APP}, status=~"5.."}}[{w}])')  # noqa: E731
 LAT = lambda w=RATE: per_pod(f"rate(http_request_duration_seconds_bucket{{{C}, {APP}}}[{w}])")  # noqa: E731
 
 
@@ -32,9 +31,6 @@ dashboard = dashboard(
     vitals(
         tile("Throttled CPU periods", "Share of CPU periods where a container hit its CPU limit. Above 10%: open Saturation.",
              throttling("cluster"), PERCENT, THROTTLING),
-        tile("p95 latency", "95th percentile request duration across the selection. Above 300ms: compare with throttling below.",
-             p95("cluster"), SECONDS, LATENCY),
-        tile("5xx rate", "Share of requests answered 5xx.", ratio(f"sum({ERRS()}) or vector(0)", f"sum({REQS()})"), PERCENT, ERRORS),
         tile("Peak CPU / limit", "The busiest container's CPU as a share of its limit. Near 100%: the kernel throttles it.",
              f"max({ratio(f'sum by (cluster, namespace, pod, container) ({USED()})', f'sum by (cluster, namespace, pod, container) ({LIMIT})')})",
              PERCENT, UTILISATION),
@@ -42,22 +38,15 @@ dashboard = dashboard(
 
     golden_signals(
         latency=[
-            graph("p95 by workload", "Request latency per workload. Rising together with throttling: the limit is the cause.", SECONDS,
-                  (p95("cluster, workload"), "{{cluster}} {{workload}}"), thresholds=LATENCY),
             graph("p95 by endpoint", "Which endpoints slow down when throttled.", SECONDS,
                   (p95("cluster, workload, method, path"), "{{cluster}} {{workload}} {{method}} {{path}}"), thresholds=LATENCY),
         ],
         traffic=[
-            graph("Requests/s by workload", "Load per workload. Throttling under rising load: the limit is too low for peak.", REQPS,
-                  (f"sum by (cluster, workload) ({REQS()})", "{{cluster}} {{workload}}")),
             graph("CPU per request", "CPU seconds spent per request. A step up after a deploy: the release got less efficient, "
                   "not the limit.", SECONDS,
                   (ratio(f"sum by (cluster, workload) ({USED()})", f"sum by (cluster, workload) ({REQS()})"), "{{cluster}} {{workload}}")),
         ],
         errors=[
-            graph("5xx ratio by workload", "Share of requests answered 5xx. Timeouts from heavy throttling can show up here.", PERCENT,
-                  (ratio(f"sum by (cluster, workload) ({ERRS()})", f"sum by (cluster, workload) ({REQS()})"), "{{cluster}} {{workload}}"),
-                  thresholds=ERRORS),
             graph("Restarts by pod", "Container restarts per step. CPU limits don't kill pods; restarts point at memory or crashes instead.", COUNT,
                   (f"sum by (cluster, pod) ({per_pod(f'increase(kube_pod_container_status_restarts_total{{{C}}}[{RATE}])')}) > 0", "{{cluster}} {{pod}}")),
         ],
@@ -65,13 +54,15 @@ dashboard = dashboard(
             graph("CPU throttling by pod", "Share of CPU periods each pod was throttled. Sustained above 10%: raise the limit or remove it. "
                   "Source: ACM Kubernetes / Compute Resources / Pod.", PERCENT,
                   (throttling("cluster, pod"), "{{cluster}} {{pod}}"), thresholds=THROTTLING),
-            graph("CPU used vs request and limit", "Used cores per workload against what it reserved and its ceiling. "
-                  "Used near the limit line: throttled. Source: ACM Kubernetes / Compute Resources / Pod.", CORES,
-                  (f"sum by (cluster, workload) ({USED()})", "{{cluster}} {{workload}} used"),
-                  (f"sum by (cluster, workload) ({REQ})", "{{cluster}} {{workload}} request"),
-                  (f"sum by (cluster, workload) ({LIMIT})", "{{cluster}} {{workload}} limit")),
         ],
     ),
+
+    extension("Is CPU use close to the request and limit?",
+              graph("CPU used vs request and limit", "Used cores per workload against what it reserved and its ceiling. "
+                    "Used near the limit line: throttled. Source: ACM Kubernetes / Compute Resources / Pod.", CORES,
+                    (f"sum by (cluster, workload) ({USED()})", "{{cluster}} {{workload}} used"),
+                    (f"sum by (cluster, workload) ({REQ})", "{{cluster}} {{workload}} request"),
+                    (f"sum by (cluster, workload) ({LIMIT})", "{{cluster}} {{workload}} limit"))),
 
     extension("Which containers should change their CPU limit?",
               grid("Containers", "Per container, over the selected time range. High throttling and high p95: raise the limit. "

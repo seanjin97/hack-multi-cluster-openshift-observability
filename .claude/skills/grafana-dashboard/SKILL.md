@@ -52,18 +52,25 @@ Look for the directory holding `components/`, `build.py` and `acm-builtin.md`. I
    - that CI gates the MR and ArgoCD deploys it on merge.
 
 ## Design language: the page
+Every team's page has the same top half. `vitals()` and `golden_signals()` always put the **standard panels** first; you only add to them.
 ```
-System Vitals    4–6 tiles: is anything wrong right now?           vitals(...)
-Golden Signals   Latency | Traffic, then Errors | Saturation       golden_signals(latency=[], traffic=[], errors=[], saturation=[])
-Extensions       collapsed rows, one per question                   extension("<question>?", line, ...)
+System Vitals    standard: Requests/s | 5xx rate | p95 latency | Peak memory / limit     vitals(...)    team tiles on line 2
+Golden Signals   standard first in each quadrant:                                         golden_signals(latency=[], ...)
+                   Latency: p95 by workload        Traffic: Requests/s by workload
+                   Errors:  5xx ratio by workload  Saturation: Memory used / limit by workload
+Extensions       collapsed rows, one per question; team/business metrics live here        extension("<question>?", line, ...)
 ```
-| The metric answers | Put it in |
-|---|---|
-| "Is it OK right now?" (success rate, backlog, firing alerts) | a Vitals `tile` |
-| How long, how much, how often it fails, how full | the matching Golden Signals quadrant |
-| A specific question ("Why do submissions fail?", "Which limit to change?") | an `extension` titled with that question |
+- **Standard panels are fixed:** RED from the golden-path histogram `http_request_duration_seconds`, saturation from pod memory. Never rebuild, rename or repeat them; conformance fails if they're missing or changed.
+- **Blank, not faked:** if the app doesn't emit the histogram, the RED panels stay empty, and their description says so. Tell the user the app must emit it (`doc/app-teams/1-metrics.md`); never fill them with a team metric.
 
-- **Quadrants:** 1–3 graphs each. Side-by-side quadrants need counts that wrap alike: 3 + 3 or 2 + 1 works, 3 + 1 doesn't.
+| The metric is | Put it in |
+|---|---|
+| The golden-path histogram, sliced further (p95 by path, requests by status) | the matching Golden Signals quadrant, after the standard graph |
+| A platform metric answering "is it OK right now?" (throttling, restarts) | a team Vitals `tile` (up to 6) or a quadrant |
+| A team/business metric (`sensor_readings_total`, `submissions_total`, any gauge) | an `extension`, titled with its question. Conformance fails it anywhere above |
+
+- **Quadrants:** 0–3 extra graphs each, after the standard one. Two per line per side, so side-by-side quadrants must wrap alike: 0–1 extras on both sides, or 2–3 on both.
+- **`vitals()` and `golden_signals()` with no arguments** are a complete, conforming top half.
 - **Placement is the library's job:** never set widths or positions.
 - **Open on the team's scope:** `scope={"namespace": "<ns>"}`.
 

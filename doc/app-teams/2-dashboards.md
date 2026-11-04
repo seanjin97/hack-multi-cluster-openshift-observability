@@ -18,28 +18,32 @@ flowchart LR
 
 ## Page structure (every dashboard; conformance fails without it)
 ```
-System Vitals    4–6 tiles: is anything wrong right now?        vitals(...)
+System Vitals    standard RED + saturation tiles, then yours    vitals(...)
 Golden Signals   Latency | Traffic, then Errors | Saturation    golden_signals(latency=[], traffic=[], errors=[], saturation=[])
-Extensions       collapsed rows, one per question                extension("<question>?", ...)
+                 each quadrant opens with its standard graph
+Extensions       collapsed rows, one per question; team metrics extension("<question>?", ...)
 ```
+- **The top half is the same on every page.** `vitals()` and `golden_signals()` always add the standard panels: Requests/s, 5xx rate, p95 latency (from `http_request_duration_seconds`) and memory / limit. You add to them; you can't replace them.
+- **No histogram, blank panels.** If your app doesn't emit `http_request_duration_seconds` yet, the RED panels are empty and say why. Emit it ([1. Metrics](1-metrics.md)); don't fill them with something else.
 - **Layout is automatic:** every line fills the width, with at most 4 graphs or tables per line.
 - **Quadrants:** 1–3 graphs each. Side-by-side quadrants need counts that wrap alike (3 + 3 or 2 + 1, not 3 + 1).
 
 ## Where your metric goes
 | It answers | Put it in |
 |---|---|
-| "Is my service OK right now?" (success rate, backlog) | a Vitals `tile` |
-| Requests your users make | Golden Signals: count in Traffic, failures in Errors, duration in Latency |
-| A business question ("Why do submissions fail?") | an `extension` titled with that question |
+| `http_request_duration_seconds`, sliced further (p95 by path) | the matching Golden Signals quadrant, after the standard graph |
+| A platform metric: "is it OK right now?" (throttling, restarts) | a Vitals `tile`, or a quadrant |
+| Your own metric (`submissions_total`, any gauge) | an `extension` titled with its question; conformance fails it anywhere above |
 
 ```python
 ALL = per_pod(f'rate(submissions_total{{{C}, {APP}}}[{RATE}])')
 OK  = per_pod(f'rate(submissions_total{{{C}, {APP}, outcome="success"}}[{RATE}])')
 BAD = per_pod(f'increase(submissions_total{{{C}, {APP}, outcome="failure"}}[{RANGE}])')
 
-vitals(tile("Submission success", "Share that succeed. Low: see 'Why do submissions fail?'.",
-            ratio(f"sum({OK})", f"sum({ALL})"), PERCENT, NEUTRAL), ...)
+vitals(), golden_signals(),  # the standard top half
 extension("Why do submissions fail?",
+          tile("Submission success", "Share that succeed. Low: see the graphs beside it.",
+               ratio(f"sum({OK})", f"sum({ALL})"), PERCENT, NEUTRAL),
           graph("Submissions by outcome", "Per second, by outcome.", REQPS, (f"sum by (cluster, outcome) ({ALL})", "{{cluster}} {{outcome}}")),
           grid("Failures by reason", "In the selected range.", ("Failures", f"sum by (cluster, workload, reason) ({BAD})", COUNT, PROBLEMS)))
 ```

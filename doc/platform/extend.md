@@ -33,7 +33,7 @@ flowchart LR
 | `units.py` | Unit constants and threshold sets |
 | `panels.py` | `tile`, `graph`, `grid`, `query`, quadrant `header` |
 | `links.py` | `builtin`/`builtins` (reads `acm-builtin.md`), `drill`, `SELF` |
-| `layout.py` | `vitals`, `golden_signals`, `extension`, `WIDTH`, `MAX_PER_LINE` |
+| `layout.py` | `vitals`, `golden_signals`, `extension`, the standard RED + saturation panels (`STANDARD_TITLES`), `WIDTH`, `MAX_PER_LINE`, `MAX_TEAM_TILES` |
 | `page.py` | `dashboard`, the five `FILTERS` |
 
 ## A new component or rule is test-first
@@ -69,7 +69,7 @@ flowchart LR
 - **A new rule** goes in `test_conformance.check()`, with one test it fails and one it passes (`ext(...)` renders a panel on a conforming page). `components/` stays a library; `build.py` writes without checking; CI gate 1 is the enforcement.
 - **Team files see only `__all__`:** the SDK (`db`, `dm`, ...) isn't exported, so teams can't bypass the components.
 - **Committed dashboards:** `test_team_dashboard_conforms` is parametrised over `build.sources()`, so a new team's `.py` is checked with no test change.
-- **Partial pages in tests:** `page()` fills in the required System Vitals and Golden Signals with `_`-titled filler panels, and `panels()` skips them.
+- **Partial pages in tests:** `page()` fills in the required System Vitals and Golden Signals (standard panels only), and `panels()` skips the standard panels.
 
 ## Housekeeping
 - **SDK bump:** edit `pyproject.toml`, run `uv lock`, `uv run pytest` and `uv run build.py`, then commit the JSON.

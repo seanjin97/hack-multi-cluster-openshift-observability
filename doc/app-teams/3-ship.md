@@ -44,6 +44,8 @@ flowchart LR
 |---|---|
 | Page | title, description, `golden-path` tag; the five standard filters only |
 | Structure | `vitals(...)`, then `golden_signals(...)`, then collapsed `extension(...)` rows only |
+| Standard panels | Vitals and each Golden Signals quadrant open with the standard RED + saturation panels, unchanged; no title repeats |
+| Team metrics | metrics scraped through `APP`, other than `http_request_duration_seconds`, only in extensions |
 | Layout | every line fills the width; at most 4 graphs or tables per line |
 | Panel | description; unit (tables exempt); a window in the title is fixed with `sizing=True` |
 | Query | filters on `$cluster`; slices on `$pod`/`$node`, or the description ends with `CLUSTER_ONLY` |

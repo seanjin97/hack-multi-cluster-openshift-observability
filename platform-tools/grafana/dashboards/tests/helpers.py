@@ -14,10 +14,10 @@ def table(window, **k):
 
 def page(*sections, **k):
     """A dashboard of the given sections, padded to a conforming page: adds System Vitals and Golden Signals
-    when a test leaves them out, with filler panels (titles starting "_") that panels() skips."""
+    (standard panels only) when a test leaves them out. panels() skips the standard panels."""
     given = {sec[0]: sec for sec in sections}
-    head = [given.get("System Vitals") or c.vitals(ok("_v")),
-            given.get("Golden Signals") or c.golden_signals(*[[ok(f"_{q}")] for q in "ltes"])]
+    head = [given.get("System Vitals") or c.vitals(),
+            given.get("Golden Signals") or c.golden_signals()]
     rest = [sec for sec in sections if sec[0] not in ("System Vitals", "Golden Signals")]
     return c.dashboard("T", "desc", [], *head, *rest, **k)
 
@@ -33,6 +33,6 @@ def ext(*lines):
 
 
 def panels(j):
-    """The test's own panels: no rows, quadrant headers or page() filler."""
+    """The test's own panels: no rows, quadrant headers or standard panels."""
     return [p for top in j["panels"] for p in [top, *top.get("panels", [])]
-            if p["type"] not in ("row", "text") and not p.get("title", "").startswith("_")]
+            if p["type"] not in ("row", "text") and p.get("title") not in c.STANDARD_TITLES]

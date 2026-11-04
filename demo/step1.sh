@@ -1,24 +1,17 @@
 #!/usr/bin/env bash
-# Demo step 1: the team is NOT onboarded (L0). doc/demo/l1-onboarding.md#1
+# Demo step 1, the baseline: the team's app is deployed and working, at L0. doc/demo/l1-onboarding.md#1
 #   worker-1 runs and emits sensor_readings_total, but on a port named "http": nobody scrapes it.
-# Files after this script:
-#   deploy/namespace.yaml   no labels (L0)
-#   deploy/deployment.yaml  port "http", probes + resources already set
-#   no dashboards/sensor-team-2/ (not in the dashboards repo, not on the hub)
-# Usage: demo/step1.sh   (resets everything, safe to re-run)
+# State (reached from any other state, safe to re-run):
+#   namespace   L0, no labels                     deploy/namespace.yaml
+#   worker-1    port "http", running              deploy/deployment.yaml
+#   loadgen     busybox calling /read ~5x/s       deploy/loadgen.yaml (same at every step)
+#   dashboard   absent (repo + hub)
+# Usage: demo/step1.sh
 source "$(dirname "$0")/lib.sh"
 
-ensure_image
-say "Resetting sensor-team-2 to L0"
-s2 delete ns $NS --ignore-not-found --wait
-namespace L0
-deployment http
-apply
-
-say "Removing any sensor-team-2 dashboard (repo + hub)"
-rm -rf "$DASH/sensor-team-2"
-(cd "$DASH" && uv run -q build.py)
-oc -n open-cluster-management-observability delete cm grafana-dashboard-sensor-team-2-worker-1 --ignore-not-found  # the loader drops it from Grafana
+say "Converging to step 1: L0, port http, no dashboard"
+converge L0 http
+dashboard absent
 
 say "State: L0. The app emits, nobody scrapes"
 s2 -n $NS get pods

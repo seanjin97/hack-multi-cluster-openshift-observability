@@ -5,3 +5,4 @@ namespace: sensor-team-2
 resources:
   - namespace.yaml
   - deployment.yaml
+  - loadgen.yaml   # mock traffic, every step

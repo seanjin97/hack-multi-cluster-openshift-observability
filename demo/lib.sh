@@ -55,8 +55,42 @@ spec:
 YAML
 }
 
-# Deploy what's in deploy/ and wait for the rollout
-apply() { s2 apply -k "$DEPLOY" && s2 -n $NS rollout status deploy/worker-1 --timeout=90s; }
+# Deploy what's in deploy/ and wait for the rollout. deploy/loadgen.yaml (mock traffic) is static: every step ships it.
+apply() { s2 apply -k "$DEPLOY" && s2 -n $NS rollout status deploy/worker-1 --timeout=90s && s2 -n $NS rollout status deploy/loadgen --timeout=60s; }
+
+# --- Declarative state: each step names where everything should be, and these get there from any state ---
+
+# converge <L0|L1> <http|metrics>: namespace level and worker port, from whatever is on the cluster now
+converge() {
+  ensure_image
+  namespace "$1"
+  deployment "$2"
+  [ "$1" = L0 ] && drop_l1
+  apply
+}
+
+# Take the namespace off L1. require-owner checks an UPDATE when the old OR new namespace is L1, so drop
+# maturity alone first (owner still set, passes), then the owner (no longer L1). No-op when there's no namespace.
+drop_l1() {
+  s2 get ns $NS >/dev/null 2>&1 || return 0
+  s2 label ns $NS starlab-platform/maturity-
+  s2 label ns $NS starlab-platform/team-
+  s2 annotate ns $NS starlab-platform/contact-
+}
+
+# dashboard <absent|present>: the sensor-team-2 dashboard in the repo (and, when absent, on the hub).
+# present = demo/fixtures/worker_1.py, what step 4 generates.
+dashboard() {
+  if [ "$1" = absent ]; then
+    rm -rf "$DASH/sensor-team-2"
+    (cd "$DASH" && uv run -q build.py)
+    oc -n open-cluster-management-observability delete cm grafana-dashboard-sensor-team-2-worker-1 --ignore-not-found  # the loader drops it from Grafana
+  else
+    mkdir -p "$DASH/sensor-team-2"
+    cp "$ROOT/demo/fixtures/worker_1.py" "$DASH/sensor-team-2/worker_1.py"
+    (cd "$DASH" && uv run -q build.py)
+  fi
+}
 
 # The worker-1 image must be on spoke-2 (imagePullPolicy: Never)
 ensure_image() {

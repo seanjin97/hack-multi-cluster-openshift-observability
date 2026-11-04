@@ -2,12 +2,13 @@
 Team dashboards build from these components only:  from components import *
 Components build; tests/test_conformance.py judges whether a dashboard follows the golden path.
 
-Page structure, always full width:
-  System Vitals    one line of tiles: is anything wrong right now?        vitals()
-  Golden Signals   Latency | Traffic, then Errors | Saturation            golden_signals()
-  Extensions       collapsed rows, one per extra question                  extension()
+Page structure, always full width. vitals() and golden_signals() always open with the standard RED +
+saturation panels (blank when the app doesn't emit the golden-path histogram); teams add to them, never replace them.
+  System Vitals    standard tiles, then the team's: is anything wrong right now?    vitals()
+  Golden Signals   Latency | Traffic, then Errors | Saturation, standard graph first golden_signals()
+  Extensions       collapsed rows, one per extra question; team metrics live here   extension()
 """
-from .layout import MAX_PER_LINE, WIDTH, extension, golden_signals, vitals
+from .layout import MAX_PER_LINE, MAX_TEAM_TILES, STANDARD_TITLES, WIDTH, extension, golden_signals, vitals
 from .links import SELF, builtin, builtins, drill
 from .page import FILTERS, dashboard
 from .panels import graph, grid, query, tile
@@ -18,7 +19,7 @@ from .units import (BPS, BYTES, CORES, COUNT, ERRORS, LATENCY, NEUTRAL, PERCENT,
 
 __all__ = [
     # page and layout
-    "dashboard", "vitals", "golden_signals", "extension", "FILTERS", "WIDTH", "MAX_PER_LINE",
+    "dashboard", "vitals", "golden_signals", "extension", "FILTERS", "WIDTH", "MAX_PER_LINE", "MAX_TEAM_TILES", "STANDARD_TITLES",
     # panels
     "tile", "graph", "grid", "query",
     # queries: filters, slicing, granularity

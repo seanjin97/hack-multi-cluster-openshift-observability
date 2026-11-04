@@ -28,6 +28,8 @@ dashboard = dashboard(
     "and endpoints. Slice any panel with the cluster, node, namespace, workload and pod filters.",
     ["platform", "fleet"],
 
+    # vitals() and golden_signals() open with the standard RED + saturation panels (components/layout.py);
+    # the panels below are the platform's own, after them.
     vitals(
         tile("Clusters reporting", f"Clusters that sent metrics to the hub. Lower than expected: check the spoke's addon. {CLUSTER_ONLY}",
              f"count(count by (cluster) (kube_node_status_allocatable{{{C}}}))", COUNT),
@@ -37,16 +39,12 @@ dashboard = dashboard(
              f'sum(kube_node_status_condition{{{C}, node=~"$node", condition="Ready", status!="true"}}) or vector(0)', COUNT, PROBLEMS),
         tile("Pods not running", "Pods in Pending, Failed or Unknown. Above 0: filter to the namespace and check its workloads.",
              f'sum({per_pod(f"kube_pod_status_phase{{{C}, phase=~\"Pending|Failed|Unknown\"}}")}) or vector(0)', COUNT, PROBLEMS),
-        tile("App 5xx rate", "Share of golden-path app requests answered 5xx. Above 1%: open the endpoints row.",
-             ratio(f"sum({ERRS()}) or vector(0)", f"sum({REQS()})"), PERCENT, ERRORS),
         tile("Peak node CPU", "The busiest selected node's CPU. Above 85%: find the node group in Saturation.",
              f'max({per_node(f"instance:node_cpu_utilisation:rate1m{{{C}}}")})', PERCENT, UTILISATION),
     ),
 
     golden_signals(
         latency=[
-            graph("App p95 by cluster", "95th percentile golden-path request duration. Above 300ms: open the endpoints row.", SECONDS,
-                  (f"histogram_quantile(0.95, sum by (cluster, le) ({LAT()}))", "{{cluster}}"), thresholds=LATENCY),
             graph("API server p99", f"Kubernetes API latency, 99th percentile. Slow: everything that talks to the API slows down. "
                   f"Source: ACM Kubernetes / API server. {CLUSTER_ONLY}", SECONDS,
                   (f"apiserver_request_duration_seconds:histogram_quantile_99{{{C}}}", "{{cluster}}"), thresholds=LATENCY),
@@ -55,8 +53,6 @@ dashboard = dashboard(
                   (f'max by (cluster, node_group) ({NODE("instance_device:node_disk_io_time_weighted_seconds:rate1m")})', "{{cluster}} {{node_group}}")),
         ],
         traffic=[
-            graph("App requests/s by cluster", "Golden-path app requests per second.", REQPS,
-                  (f"sum by (cluster) ({REQS()})", "{{cluster}}")),
             graph("App requests/s by status", "Requests per second per status code. Watch 4xx and 5xx grow.", REQPS,
                   (f"sum by (cluster, status) ({REQS()})", "{{cluster}} {{status}}")),
             graph("Node network by group", "Bytes received and sent by node group. Source: ACM USE Method / Node.", BPS,
@@ -64,8 +60,6 @@ dashboard = dashboard(
                   (f'sum by (cluster, node_group) ({NODE("instance:node_network_transmit_bytes_excluding_lo:rate1m")})', "{{cluster}} {{node_group}} out")),
         ],
         errors=[
-            graph("App 5xx ratio", "Share of requests answered 5xx. Above 1%: open the endpoints row.", PERCENT,
-                  (ratio(f"sum by (cluster) ({ERRS()})", f"sum by (cluster) ({REQS()})"), "{{cluster}}"), thresholds=ERRORS),
             graph("TCP retransmits by node group", "Share of TCP segments retransmitted. Above 1%: packet loss or a congested node; "
                   "find the pod in 'Which pods are loading the node network?'. Source: ACM Kubernetes / Networking / Node.", PERCENT,
                   (ratio(f'sum by (cluster, node_group) ({by_node_group(per_node(f"rate(node_netstat_Tcp_RetransSegs{{{C}}}[{RATE}])"))})',
