@@ -1,8 +1,8 @@
-IMAGE ?= api-server:dev
+IMAGE ?= worker-1:dev
 
-.PHONY: api-dev test lint build docker
+.PHONY: dev test lint build docker
 
-api-dev:
+dev:
 	go tool air -c .air.toml
 
 test:
@@ -13,7 +13,7 @@ lint:
 	@test -z "$$(gofmt -l .)" || { echo "gofmt needed:"; gofmt -l .; exit 1; }
 
 build:
-	CGO_ENABLED=0 go build -trimpath -o bin/api-server ./api-server
+	CGO_ENABLED=0 go build -trimpath -o bin/worker-1 ./worker-1
 
 docker:
-	docker build -f api-server/Dockerfile -t $(IMAGE) .
+	docker build -f worker-1/Dockerfile -t $(IMAGE) .

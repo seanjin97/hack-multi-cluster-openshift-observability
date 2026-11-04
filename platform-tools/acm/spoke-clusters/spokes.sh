@@ -8,6 +8,7 @@
 #
 # Files:
 #   k3d-cluster.yaml               the k3s cluster (2 nodes), shared by every spoke
+#   hub-dns.yaml                   resolves the hub's names inside every spoke
 #   spoke-N/managed-cluster.yaml   registers spoke-N with ACM (applied to the hub)
 #   metrics/manifestwork.yaml      scrape + forward every pod's "metrics" port (hub -> every spoke)
 #   kyverno/                       admission-only Kyverno + the L1 policies (every spoke)
@@ -28,7 +29,7 @@ if [ "${1:-}" = down ]; then
   exit 0
 fi
 
-# Values k3d fills into k3d-cluster.yaml
+# Values filled into k3d-cluster.yaml and hub-dns.yaml
 export HUB_IP=$(docker run --rm --add-host h:host-gateway busybox grep -w h /etc/hosts | awk '{print $1}')
 export CA=${CA:-/dev/null}
 # crc's pull secret, as a k3s registries.yaml (JSON is valid YAML). Generated
@@ -43,6 +44,11 @@ for dir in spoke-*/; do
   ctx=k3d-$SPOKE
 
   k3d cluster get "$SPOKE" >/dev/null 2>&1 || k3d cluster create --config k3d-cluster.yaml
+
+  # Hub names, before the klusterlet needs api.crc.testing. Restart CoreDNS to load them.
+  sed "s/\${HUB_IP}/$HUB_IP/" hub-dns.yaml | oc --context "$ctx" apply -f -
+  oc --context "$ctx" rollout restart deploy/coredns -n kube-system
+  oc --context "$ctx" rollout status deploy/coredns -n kube-system --timeout=2m
 
   # Import into ACM: register on the hub, then apply the manifests ACM generates
   oc apply -f "$SPOKE/managed-cluster.yaml"

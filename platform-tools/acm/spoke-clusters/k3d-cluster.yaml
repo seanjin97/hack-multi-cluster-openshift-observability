@@ -7,15 +7,7 @@ metadata:
 servers: 1
 agents: 1
 
-# crc's api.crc.testing / *.apps-crc.testing resolve to the Mac's 127.0.0.1.
-# Inside Docker the Mac is the host gateway (${HUB_IP}), so point the hub's names there.
-hostAliases:
-  - ip: ${HUB_IP}
-    hostnames:
-      - api.crc.testing                                                              # klusterlet -> hub API
-      - observatorium-api-open-cluster-management-observability.apps-crc.testing     # metrics push
-      - alertmanager-open-cluster-management-observability.apps-crc.testing          # alerts push
-      - cluster-proxy-anp.apps-crc.testing                                           # hub -> spoke tunnel (console, oc via hub)
+# Hub names (api.crc.testing, ...) come from hub-dns.yaml, applied by spokes.sh.
 
 # ACM's agent images come from registry.redhat.io. ACM doesn't copy usable
 # credentials to the spokes, so the nodes use crc's own pull secret.
