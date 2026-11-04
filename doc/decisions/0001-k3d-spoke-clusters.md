@@ -34,14 +34,14 @@ flowchart LR
 
 ### Connecting to crc
 - crc's `*.crc.testing` names resolve to the Mac's `127.0.0.1`; from inside Docker the Mac is the host gateway.
-- `k3d-cluster.yaml` `hostAliases` map the hub names to the gateway: API, `observatorium-api`, `alertmanager`, `cluster-proxy-anp`.
+- `hub-dns.yaml` (a `coredns-custom` ConfigMap) maps the hub names to the gateway: API, `observatorium-api`, `alertmanager`, `cluster-proxy-anp`. k3s never rewrites it, so it survives `k3d cluster stop/start`; k3d `hostAliases` were dropped from CoreDNS on restart.
 - Real names mean the hub's TLS certificates validate, with no `insecure` flags.
 - Agent images come from `registry.redhat.io`, so the nodes get crc's pull secret through k3s `registries.yaml`. Behind WARP they also need the Cloudflare CA.
 
 ## Why k3d
 - Lightest multi-node Kubernetes: a single binary, SQLite instead of etcd, and nodes are containers, not VMs.
 - Reuses the Docker that's already installed; no new hypervisor.
-- One config file covers nodes, host aliases, registry auth and the CA.
+- One config file covers nodes, registry auth and the CA.
 - A spoke is created or deleted in about a minute, so rebuilding is cheap.
 
 ## Fidelity vs OpenShift spokes
@@ -74,4 +74,4 @@ flowchart LR
 - A 3rd spoke needs a higher `fs.inotify.max_user_instances` in Colima.
 - Networking is local only: no LB, firewall, latency or outages.
 - Spoke nodes hold crc's pull secret. Production would use a mirror or scoped credentials.
-- `hostAliases` changes apply only to new clusters: `./spokes.sh down && ./spokes.sh` (~5 min).
+- A new host gateway IP (another Colima profile or Docker runtime) needs `./spokes.sh` re-run to refresh `hub-dns.yaml`.

@@ -1,0 +1,17 @@
+# Hub names for pods on the spoke. crc's api.crc.testing / *.apps-crc.testing
+# resolve to the Mac's 127.0.0.1; inside Docker the Mac is the host gateway
+# (${HUB_IP}, filled in by spokes.sh). k3s's CoreDNS imports coredns-custom and
+# never rewrites it, so this survives `k3d cluster stop/start` (hostAliases don't).
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: coredns-custom, namespace: kube-system}
+data:
+  hub.server: |
+    crc.testing:53 apps-crc.testing:53 {
+      hosts {
+        ${HUB_IP} api.crc.testing
+        ${HUB_IP} observatorium-api-open-cluster-management-observability.apps-crc.testing
+        ${HUB_IP} alertmanager-open-cluster-management-observability.apps-crc.testing
+        ${HUB_IP} cluster-proxy-anp.apps-crc.testing
+      }
+    }
