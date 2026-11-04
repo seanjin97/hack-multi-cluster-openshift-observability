@@ -1,0 +1,3 @@
+/grafana-dashboard create grafana dashboard for sensor-team-2
+
+get sensor_readings_total: count, sensor_reading_celsius gauge graphed.
